@@ -1,38 +1,50 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  justify-content: space-around;
   align-items: center;
+  height: 100vh;
+  background-color: #013220; /* Dark green, similar to poker tables */
+}
+
+.card {
+  width: 100px;
+  height: 140px;
+  border-radius: 10px; /* Rounded edges for cards */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+  background-image: url('./images/card-back.png'); /* A typical card back design */
+  background-size: cover;
+  cursor: pointer;
+}
+
+.deck, .discard {
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  align-items: center;
   color: white;
+  font-weight: bold;
+  font-size: 1.2em;
 }
 
-.App-link {
-  color: #61dafb;
+.discard {
+  border: 2px dashed #ccc; /* Dashed border for empty discard pile */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.play-area {
+  border: 2px dashed blue;
+  height: 200px;
+  width: 60%; /* Give more space for playing area */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
 }
