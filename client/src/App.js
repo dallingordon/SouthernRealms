@@ -21,7 +21,10 @@ function App() {
       setHand([...hand, newCard]);
     }
   };
-
+  const handleDrop = (item) => {
+    setDiscard([...discard, item.id]);
+    setHand(hand.filter(card => card !== item.id));
+  };
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="App">
@@ -30,7 +33,7 @@ function App() {
           <PlayArea />
           <Hand cards={hand} />
         </div>
-        <DiscardPile cards={discard} />
+        <DiscardPile cards={discard} onDrop={handleDrop} />
       </div>
     </DndProvider>
   );
