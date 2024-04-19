@@ -1,41 +1,24 @@
 import React from 'react';
-import { useDrag } from 'react-dnd';
+import { useDrop } from 'react-dnd';
+import Card from './Card'; // Ensure the path is correct based on your project structure
 
-const Card = ({ id, text }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "card",
-    item: { id },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
+function Hand({ cards, setCards }) {
+  const [{ isOver }, drop] = useDrop({
+    accept: "card",
+    drop: (item, monitor) => {
+      if (!monitor.didDrop()) {
+        // Optionally handle card removal or other interactions
+      }
+    },
+    collect: monitor => ({
+      isOver: !!monitor.isOver(),
     }),
-  }));
+  });
 
   return (
-    <div
-      ref={drag}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-        cursor: 'move',
-        width: '100px',
-        height: '140px',
-        backgroundColor: 'white',
-        borderRadius: '10px',
-        margin: '5px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
-    >
-      {text}
-    </div>
-  );
-};
-
-function Hand({ cards }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center' }}>
+    <div ref={drop} className="hand" style={{ backgroundColor: isOver ? 'lightgreen' : 'transparent' }}>
       {cards.map((card, index) => (
-        <Card key={card} id={card} text={card} />
+        <Card key={index} id={card.id} text={card.text} />
       ))}
     </div>
   );

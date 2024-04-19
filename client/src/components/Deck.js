@@ -2,9 +2,11 @@ import React from 'react';
 
 function Deck({ onDraw }) {
   return (
-    <div onClick={onDraw} className="deck card">
-      Deck
-    </div>
+      <div className="pile">
+        <div onClick={onDraw} className="card card-face-down">
+          Deck
+        </div>
+      </div>
   );
 }
 
