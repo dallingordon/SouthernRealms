@@ -3,12 +3,17 @@ import Deck from './components/Deck';
 import Hand from './components/Hand';
 import PlayArea from './components/PlayArea';
 import DiscardPile from './components/DiscardPile';
+import Card from './components/Card';  // Import Card component
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import './App.css';  // Ensure CSS is being imported
+import './App.css';
 
 function App() {
-  const initialDeck = Array.from({ length: 50 }, (_, i) => `Card ${i + 1}`);
+  const initialDeck = Array.from({ length: 50 }, (_, i) => ({
+    id: `Card${i + 1}`,
+    text: `Card ${i + 1}`
+  }));
+  /* console.log(initialDeck); */
   const [deck, setDeck] = useState(initialDeck);
   const [hand, setHand] = useState([]);
   const [discard, setDiscard] = useState([]);
@@ -17,19 +22,21 @@ function App() {
   const drawCard = () => {
     if (deck.length > 0) {
       const newCard = deck[0];
+      /* console.log(newCard); works */
       const newDeck = deck.slice(1);
       setDeck(newDeck);
       setHand([...hand, newCard]);
+
     }
   };
 
   const handleDropToDiscard = (item) => {
-    setDiscard([...discard, item.id]);
+    setDiscard([...discard, item]);
     setHand(hand.filter(card => card !== item.id));
   };
 
   const handleDropToPlayArea = (item) => {
-    setPlayArea([...playArea, item.id]); // Add the card to the play area
+    setPlayArea([...playArea, item]); // Add the card to the play area
     setHand(hand.filter(card => card !== item.id)); // Remove from hand
   };
 
@@ -38,10 +45,14 @@ function App() {
       <div className="App">
         <div className="game-area">
           <Deck onDraw={drawCard} />
-          <PlayArea cards={playArea} onDrop={handleDropToPlayArea} />
-          <DiscardPile cards={discard} onDrop={handleDropToDiscard} />
+          <PlayArea cards={playArea.map(card =>
+            <Card  id={card.id} text={card.text} onMoveCard={handleDropToPlayArea} />
+          )} />
+          <DiscardPile cards={discard.map(card =>
+            <Card id={card.id} text={card.text} onMoveCard={handleDropToDiscard} />
+          )} />
         </div>
-        <Hand cards={hand} />
+        <Hand cards={hand} setCards={setHand} />
       </div>
     </DndProvider>
   );

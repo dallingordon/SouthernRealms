@@ -3,6 +3,7 @@ import React from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
 const Card = ({ id, text, onMoveCard }) => {
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "card",
     item: { id },
