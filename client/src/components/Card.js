@@ -1,37 +1,23 @@
-// Card.js
 import React from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag } from 'react-dnd';
 
-const Card = ({ id, text, onMoveCard }) => {
-
+const Card = ({ id, text, onMoveCard, source }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "card",
-    item: { id },
-    collect: (monitor) => ({
+    item: { id, type: "card", source }, // Add 'source' to the drag item
+    collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
   }));
 
-  const [{ isOver }, drop] = useDrop({
-    accept: "card",
-    hover: (item, monitor) => {
-      if (item.id !== id) {
-        onMoveCard(item.id, id);
-      }
-    },
-    collect: monitor => ({
-      isOver: !!monitor.isOver(),
-    }),
-  });
-
   const style = {
     opacity: isDragging ? 0.5 : 1,
-    cursor: 'grab',
+    cursor: 'move', // Change cursor to indicate move
   };
 
   return (
-    <div ref={(node) => drag(drop(node))} className="card card-face-up" style={style}>
-      {text}
+    <div ref={drag} className="card card-face-up" style={style}>
+      {text}{source}
     </div>
   );
 };

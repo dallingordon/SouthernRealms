@@ -52,26 +52,50 @@ body, html {
 
 
 
+/* Common styles for piles (deck, discard) */
 .pile {
-  flex: 1; /* Allow these components to grow as needed */
+  position: relative;
+  width: 100px; /* Fixed width to ensure consistency */
+  height: 140px; /* Fixed height to match card size */
+  border: 2px dashed black; /* Style for piles */
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100px; /* Set a fixed width */
-  height: 140px; /* Set a fixed height */
-  border: 2px dashed black; /* Style for empty discard pile */
+  background-color: transparent;
 
+}
+
+/* Specific adjustments if needed for discard pile, remove if using common .pile */
+.discard-pile {
+  /* Inherits all styles from .pile, add any specific overrides or additions here */
+}
+
+.card-in-discard {
+  position: absolute;
+  width: 100%; /* Full width of the pile */
+  height: 100%; /* Full height of the pile */
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease-in-out; /* Smooth transition for stacking animation */
 }
 
 .empty-discard {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 32px; /* Large font size for the X */
-  color: red; /* Red color for the X */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666; /* Color for empty discard text */
+  font-size: 20px; /* Font size for visibility */
+  text-align: center; /* Center the text horizontally */
 }
+
+/* Styles for the deck pile if distinct styles are needed */
+.deck-pile {
+  /* Add specific styles for the deck here if different from .pile */
+}
+
 
 
 .play-area, .hand {

@@ -1,38 +1,40 @@
 import React from 'react';
 import { useDrop } from 'react-dnd';
+import Card from './Card';
 
-function DiscardPile({ cards, onDrop }) {
+function DiscardPile({ cards, moveCard }) {
   const [{ isOver }, drop] = useDrop({
     accept: 'card',
-    drop: (item) => onDrop(item),
+    drop: (item) => {
+      moveCard(item.id, item.source, 'discard');
+    },
     collect: monitor => ({
       isOver: !!monitor.isOver(),
     }),
   });
 
-  // Define the style conditionally based on isOver
   const style = {
-    backgroundColor: isOver ? 'rgba(0, 0, 0, 0.15)' : 'transparent', // Darkens background when a card is over the pile
-    padding: '10px', // Ensures padding around the cards
-    width: '100%', // Ensures the drop area is visually defined
-    height: '140px', // Consistent height
-    display: 'flex', // Allows card layout within the pile
-    justifyContent: 'center', // Center cards horizontally
-    alignItems: 'center', // Center cards vertically
-    border: '2px dashed black', // Styling for the discard pile border
+    backgroundColor: isOver ? 'rgba(0, 0, 0, 0.15)' : 'transparent',
+    position: 'relative', // Ensure stacking context
+    width: '100px', // Adjust width to fit one card
+    height: '140px', // Adjust height to fit one card
+    overflow: 'hidden', // Prevent cards from overflowing the boundary
+    border: '2px dashed black'
   };
 
   return (
-    <div ref={drop} className="pile" style={style}>
-      {cards.length > 0 ? (
-        cards.map((card, index) => (
-          <div key={index} className="card card-face-down">
-            {/* Optionally, you can display text or nothing */}
-          </div>
-        ))
-      ) : (
-        <div className="empty-discard">X</div>
-      )}
+    <div class="pile">
+      <div ref={drop} className="discard-pile" style={style}>
+        {cards.length > 0 ? (
+          cards.map((card, index) => (
+            <div key={card.id} className="card-in-discard" style={{ zIndex: cards.length - index }}>
+              <Card id={card.id} text={card.text} onMoveCard={moveCard} source="discard" />
+            </div>
+          ))
+        ) : (
+          <div className="empty-discard">No Cards</div>
+        )}
+      </div>
     </div>
   );
 }
