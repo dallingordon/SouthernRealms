@@ -1,36 +1,34 @@
 import React from 'react';
 import { useDrop } from 'react-dnd';
-import Card from './Card'; // Ensure this path is correct based on your project structure
+import Card from './Card'; // Ensure the Card component is imported
 
-function PlayArea({ cards, setCards }) {
-  const handleCardMove = (draggedId, hoverId) => {
-    const draggedIndex = cards.findIndex(card => card.id === draggedId);
-    const hoverIndex = cards.findIndex(card => card.id === hoverId);
-    let newCards = [...cards];
-    let temp = newCards[draggedIndex];
-    newCards[draggedIndex] = newCards[hoverIndex];
-    newCards[hoverIndex] = temp;
-    setCards(newCards);
-  };
-
+function PlayArea({ cards, moveCard }) {
   const [{ isOver }, drop] = useDrop({
-    accept: "card",
-    drop: (item, monitor) => {
-      if (!monitor.didDrop()) {
-        // Add the card to the current cards in play area
-        console.log(setCards)
-        setCards(prevCards => [...prevCards, item]);
-      }
+    accept: 'card',
+    drop: (item) => {
+      moveCard(item.id, 'playArea'); // Move card to play area when dropped
     },
     collect: monitor => ({
       isOver: !!monitor.isOver(),
     }),
   });
 
+  const style = {
+    backgroundColor: isOver ? 'rgba(100, 100, 255, 0.5)' : 'transparent', // Custom style for Play Area
+    padding: '10px', // Padding around the cards
+    width: '100%', // Full width to contain multiple cards
+    minHeight: '140px', // Minimum height to maintain area visibility
+    display: 'flex', // Flex display to arrange cards horizontally or vertically based on your design
+    flexWrap: 'wrap', // Wrap cards if they do not fit in a single row
+    justifyContent: 'start', // Align cards to the start of the play area
+    alignItems: 'start', // Align items to the start vertically
+    border: '2px dashed blue', // Styling for the play area border
+  };
+
   return (
-    <div ref={drop} className="play-area">
-      {cards.map((card, index) => (
-        <Card key={card.id} id={card.id} text={card.text} onMoveCard={handleCardMove} />
+    <div ref={drop} className="playArea" style={style}>
+      {cards.map(card => (
+        <Card key={card.id} id={card.id} text={card.text} source="playArea" onMoveCard={moveCard} />
       ))}
     </div>
   );

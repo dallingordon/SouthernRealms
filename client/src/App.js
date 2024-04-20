@@ -6,6 +6,8 @@ import DiscardPile from './components/DiscardPile';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import './App.css';
+import playArea from "./components/PlayArea";
+import discardPile from "./components/DiscardPile";
 
 function App() {
   const initialDeck = Array.from({ length: 50 }, (_, i) => ({
@@ -36,6 +38,7 @@ function App() {
 
   // Generalized function to move cards between areas
   const moveCard = (cardId, target) => {
+
     const sourceAreas = ['deck', 'hand', 'playArea', 'discard'];
     const source = sourceAreas.find(area => state[area].some(card => card.id === cardId));
 
