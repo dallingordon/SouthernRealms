@@ -7,11 +7,12 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import './App.css';
 import playArea from "./components/PlayArea";
+import axios from 'axios';
 import discardPile from "./components/DiscardPile";
 
 function App() {
   const initialDeck = Array.from({ length: 50 }, (_, i) => ({
-    id: `Card${i + 1}`,
+    id: `${i + 1}`,
     text: `Card ${i + 1}`,
     source: 'deck' // Initialize all cards in the deck with 'deck' as the source
   }));
@@ -26,13 +27,25 @@ function App() {
   // Function to draw a card from the deck and add to the hand
   const drawCard = () => {
     if (state.deck.length > 0) {
-      const newCard = { ...state.deck[0], source: 'hand' }; // Set the source to 'hand' when drawing
-      const newDeck = state.deck.slice(1);
-      setState(prevState => ({
-        ...prevState,
-        deck: newDeck,
-        hand: [...prevState.hand, newCard]
-      }));
+      const cardToDraw = state.deck[0];
+      // Fetch the filename from the server
+      axios.get(`http://localhost:3001/cards/${cardToDraw.id}`) //make this port dynamic too
+        .then(response => {
+          const newCard = {
+            ...cardToDraw,
+            text: response.data.filename, // Set the filename as text
+            source: 'hand'
+          };
+          const newDeck = state.deck.slice(1);
+          setState(prevState => ({
+            ...prevState,
+            deck: newDeck,
+            hand: [...prevState.hand, newCard]
+          }));
+        })
+        .catch(error => {
+          console.error('Error fetching card details:', error);
+        });
     }
   };
 

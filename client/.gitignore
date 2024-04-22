@@ -2,7 +2,7 @@
 
 # dependencies
 /node_modules
-/src/images/cardImages
+/public/images/cardImages
 /.pnp
 .pnp.js
 
