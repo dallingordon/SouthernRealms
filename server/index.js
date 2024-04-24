@@ -20,6 +20,51 @@ let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
   }
 });
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+}
+
+
+// Get a deck by deckid
+app.get('/deck/:deckid', (req, res) => {
+  const deckid = req.params.deckid;
+  const sql = `
+    SELECT ds.cardid, c.filename, ds.quantity
+    FROM decksetup ds
+    JOIN cards c ON ds.cardid = c.id
+    WHERE ds.deckid = ?
+  `;
+
+  db.all(sql, [deckid], (err, rows) => {
+    if (err) {
+      res.status(400).send({error: err.message});
+      return;
+    }
+
+    // Expand rows based on the quantity and include unique IDs and separate cardid
+    const expandedRows = [];
+    rows.forEach(row => {
+      for (let i = 0; i < row.quantity; i++) {
+        expandedRows.push({
+          id: `${deckid}-${row.cardid}-${i}`, // Unique ID combining deckid, cardid, and instance count
+          cardid: row.cardid,                // Original card ID
+          filename: row.filename
+        });
+      }
+    });
+
+    shuffleArray(expandedRows); // im not sure about this.  i might make the db do it? not sure thats a good idea either.
+    // do i care about persisting the order of the deck? idk
+    res.json(expandedRows);
+  });
+});
+
+
+
+
 // Endpoint to get card data
 app.get('/cards', (req, res) => {
 

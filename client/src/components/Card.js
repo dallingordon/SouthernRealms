@@ -1,11 +1,10 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
 
-const Card = ({ id, text, onMoveCard, source }) => {
-
+const Card = ({ id, cardid, text, onMoveCard, source }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "card",
-    item: { id, type: "card", source }, // Add 'source' to the drag item
+    item: { id, type: "card", source }, // Use 'id' for dragging and drop identification
     collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -16,12 +15,12 @@ const Card = ({ id, text, onMoveCard, source }) => {
   const style = {
     opacity: isDragging ? 0.5 : 1,
     backgroundImage: `url('${imageUrl}')`,
-    cursor: 'move', // Change cursor to indicate move
+    cursor: 'move'
   };
 
   return (
     <div ref={drag} className="card card-face-up" style={style}>
-      {text}{source}
+
     </div>
   );
 };

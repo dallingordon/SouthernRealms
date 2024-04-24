@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Deck from './components/Deck';
 import Hand from './components/Hand';
 import PlayArea from './components/PlayArea';
@@ -11,25 +11,40 @@ import axios from 'axios';
 import discardPile from "./components/DiscardPile";
 
 function App() {
-  const initialDeck = Array.from({ length: 50 }, (_, i) => ({
-    id: `${i + 1}`,
-    text: `Card ${i + 1}`,
-    source: 'deck' // Initialize all cards in the deck with 'deck' as the source
-  }));
-
   const [state, setState] = useState({
-    deck: initialDeck,
+    deck: [],
     hand: [],
     playArea: [],
     discard: []
   });
+
+  const deckId = 5; // This could be dynamic based on user selection or routing
+
+  useEffect(() => {
+    axios.get(`http://localhost:3001/deck/${deckId}`)
+      .then(response => {
+        const initialDeck = response.data.map(card => ({
+          id: card.id,         // Unique ID for instance
+          cardid: card.cardid, // Original card ID
+          text: card.filename, // Assuming 'filename' is used as 'text'
+          source: 'deck'
+        }));
+        setState(prevState => ({
+          ...prevState,
+          deck: initialDeck
+        }));
+      })
+      .catch(error => {
+        console.error('Error fetching deck:', error);
+      });
+  }, [deckId]);
 
   // Function to draw a card from the deck and add to the hand
   const drawCard = () => {
     if (state.deck.length > 0) {
       const cardToDraw = state.deck[0];
       // Fetch the filename from the server
-      axios.get(`http://localhost:3001/cards/${cardToDraw.id}`) //make this port dynamic too
+      axios.get(`http://localhost:3001/cards/${cardToDraw.cardid}`) //make this port dynamic too
         .then(response => {
           const newCard = {
             ...cardToDraw,
