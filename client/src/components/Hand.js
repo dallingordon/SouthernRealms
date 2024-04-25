@@ -19,7 +19,7 @@ function Hand({ cards, moveCard }) {
     <div ref={drop} className="hand" style={{ backgroundColor: isOver ? 'lightgreen' : 'transparent' }}>
       {cards.map((card) => (
         // Ensure each Card is draggable and can handle moving based on the game's logic
-        <Card key={card.id} id={card.id} text={card.text} source="hand" onMoveCard={moveCard} />
+        <Card key={card.id} id={card.id} cardid={card.cardid} text={card.text} isDeactivated={false} />
       ))}
     </div>
   );
