@@ -28,10 +28,19 @@ function PlayArea({ cards, moveCard }) {
   return (
     <div ref={drop} className="playArea" style={style}>
       {cards.map(card => (
-        <Card key={card.id} id={card.id} text={card.text} source="playArea" onMoveCard={moveCard} />
+        <Card
+          key={card.id}
+          id={card.id}
+          cardid={card.cardid}
+          text={card.text}
+          source={card.source} // Ensure you pass source if it's used in the Card component
+          isDeactivated={card.isDeactivated}
+        />
       ))}
     </div>
   );
 }
+
+
 
 export default PlayArea;

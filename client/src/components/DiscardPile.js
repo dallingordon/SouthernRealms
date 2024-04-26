@@ -28,7 +28,7 @@ function DiscardPile({ cards, moveCard }) {
         {cards.length > 0 ? (
           cards.map((card, index) => (
             <div key={card.id} className="card-in-discard" style={{ zIndex: cards.length - index }}>
-              <Card id={card.id} text={card.text} onMoveCard={moveCard} source="discard" />
+              <Card id={card.id} cardid={card.cardid} text={card.text} isDeactivated={false}  />
             </div>
           ))
         ) : (
