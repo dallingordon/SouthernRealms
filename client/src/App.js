@@ -8,6 +8,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import './App.css';
 import playArea from "./components/PlayArea";
 import axios from 'axios';
+
 import discardPile from "./components/DiscardPile";
 
 
@@ -19,7 +20,7 @@ function App() {
     discard: []
   });
 
-  const deckId = 8; // This could be dynamic based on user selection or routing
+  const deckId = 7; // This could be dynamic based on user selection or routing
 
   useEffect(() => {
     axios.get(`http://localhost:3001/deck/${deckId}`)
@@ -93,7 +94,6 @@ function App() {
     }));
 
   };
-
 
 
 

@@ -1,8 +1,13 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = 3001;
+
+//this is for user stuff:
+app.use(express.json());
 
 app.use(cors({
   origin: 'http://localhost:3000' // restrict calls to those originating from this domain
@@ -12,7 +17,7 @@ const dbPath = '../database/southernrealms.db';
 console.log(`Database path: ${dbPath}`);
 // Open the SQLite database
 console.log(`Attempting to connect to the database at ${dbPath}`);
-let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
+let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
     console.error('Error when connecting to the SQLite database:', err.message);
   } else {
@@ -26,6 +31,58 @@ function shuffleArray(array) {
         [array[i], array[j]] = [array[j], array[i]]; // Swap elements
     }
 }
+
+//user stuff:
+app.post('/register', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).send('Username and password are required');
+  }
+
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) {
+      return res.status(500).send('Error hashing password');
+    }
+    db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hash], (err) => {
+      if (err) {
+        return res.status(500).send('Username is already taken');
+      }
+      res.send('User registered');
+    });
+  });
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err || !user) {
+      return res.status(401).send('User not found');
+    }
+
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (!result) {
+        return res.status(403).send('Incorrect password');
+      }
+
+      const token = jwt.sign({ id: user.id, username: user.username }, 'your-secret-key', { expiresIn: '1h' });
+      res.json({ message: 'Logged in successfully', token });
+    });
+  });
+});
+
+app.get('/protected', (req, res) => {
+  const token = req.headers['authorization'].split(' ')[1]; // Get the token from the header
+
+  jwt.verify(token, 'your-secret-key', (err, decoded) => {
+    if (err) {
+      return res.status(401).send({error: 'Unauthorized: Invalid token'});
+    } else {
+      res.json({message: 'Welcome to the protected route!', user: decoded});
+    }
+  });
+});
+
+
 
 
 // Get a deck by deckid
