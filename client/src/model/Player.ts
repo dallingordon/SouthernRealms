@@ -12,7 +12,7 @@ export default class Player {
   constructor({
     userId,
     playerName,
-    deck
+    deck,
   }: {
     userId: string;
     playerName: string;
