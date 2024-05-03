@@ -1,0 +1,10 @@
+import styles from "../styles/play.module.css"
+
+
+export default function Play() {
+
+  return <main className={styles.play}>
+    PLAY
+
+  </main>
+}
