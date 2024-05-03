@@ -1,3 +1,4 @@
+/** SSO'd user for Auth  */
 export default class User {
   public userName: string;
   public imgUrl: string;

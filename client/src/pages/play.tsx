@@ -1,11 +1,9 @@
 import PlayLayout from "@/components/layout/PlayLayout"
-import styles from "../styles/pages/play.module.css"
-import dbUtil from "../util/dbUtil"
 
 
 export default function Play() {
 
-  dbUtil.registerGame();
+  // DBUtil.registerGame();
   console.log("posted")
 
   return <PlayLayout>

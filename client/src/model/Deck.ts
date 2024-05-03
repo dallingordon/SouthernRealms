@@ -7,18 +7,10 @@ export default class Deck {
 
   public cardBackImgUrl: string;
 
-  constructor({
-    id,
-    cards,
-    cardBackImgUrl,
-  }: {
-    id: string;
-    cards: Array<Card>;
-    cardBackImgUrl: string;
-  }) {
+  constructor({ id, cards }: { id: string; cards: Array<Card> }) {
     this.id = id;
     this.cards = cards;
-    this.cardBackImgUrl = cardBackImgUrl;
+    this.cardBackImgUrl = this.getCardBack(id);
   }
 
   public shuffle() {}
@@ -26,4 +18,9 @@ export default class Deck {
   public addCard(cardName: string) {}
 
   public removeCard(cardName: string) {}
+
+  public getCardBack(id: string): string {
+    // make fetch to get the cardback url for this specific deck id
+    return "";
+  }
 }
