@@ -1,15 +1,15 @@
 import DBUtil from "../util/DBUtil";
 import Deck from "./Deck"; // Assuming Deck class handles individual card management
 import User from "./User";
-
+import Pile from "./Pile"
 /** Player is a User once they have been initialized into a game session */
 export default class Player {
   public user: User;
   public deckId: string;
-  public drawPile: Deck;
+  public drawPile: Pile;
   public hand: Deck;
   public playArea: Deck;
-  public discardPile: Deck;
+  public discardPile: Pile;
 
   constructor({ user, deckId }: { user: User; deckId: string }) {
     this.user = user;
@@ -17,11 +17,10 @@ export default class Player {
 
     const cards = DBUtil.getDeck(deckId);
 
-    this.drawPile = new Deck({ id: deckId, cards });
-
+    this.drawPile = new Pile({ id: deckId, cards, cardBackImgUrl: 'url-for-draw-pile', shuffles: true });
+    this.discardPile = new Pile({ id: deckId, cards: [], cardBackImgUrl: 'url-for-discard-pile', shuffles: false });
     this.hand = new Deck({ id: deckId, cards: [] });
     this.playArea = new Deck({ id: deckId, cards: [] });
-    this.discardPile = new Deck({ id: deckId, cards: [] });
 
     this.shuffleDrawPile(); // Initial shuffle of the draw pile
   }

@@ -1,26 +1,14 @@
-import Card from "./Card";
 
-export default class Deck {
-  public id: string;
+import CardCollection from "./CardCollection"; // Ensure this path is correct
 
-  public cards: Array<Card>;
+export default class Deck extends CardCollection {
 
-  public cardBackImgUrl: string;
 
-  constructor({ id, cards }: { id: string; cards: Array<Card> }) {
-    this.id = id;
-    this.cards = cards;
-    this.cardBackImgUrl = this.getCardBack(id);
-  }
-
-  public shuffle() {}
-
-  public addCard(cardName: string) {}
-
-  public removeCard(cardName: string) {}
-
-  public getCardBack(id: string): string {
-    // make fetch to get the cardback url for this specific deck id
-    return "";
+  public moveCard(fromIndex: number, toIndex: number) {
+    if (fromIndex < 0 || fromIndex >= this.cards.length || toIndex < 0 || toIndex >= this.cards.length || fromIndex === toIndex) {
+      throw new Error("Invalid index provided.");
+    }
+    const [card] = this.cards.splice(fromIndex, 1);
+    this.cards.splice(toIndex, 0, card);
   }
 }
