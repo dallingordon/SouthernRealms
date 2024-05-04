@@ -1,12 +1,12 @@
 import Card from "./Card";
 import exp from "constants";
 
-export enum EffectScope {
+enum EffectScope {
   Immediate,
   Persistent
 }
 
-export class Effect {
+export default class Effect {
   affectedCardType: string;
   description: string;
   scope: EffectScope;

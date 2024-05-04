@@ -1,7 +1,7 @@
 import Card from "./Card";
-import {Effect} from "./Effect";
+import Effect from "./Effect";
 
-default export class EffectManager {
+export default class EffectManager {
   private activeEffects: Effect[] = [];
 
   applyEffect(card: Card): Card {

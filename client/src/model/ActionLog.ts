@@ -1,7 +1,7 @@
 // ActionLog.ts
 import Action from "./Action";  // Import Action type from Action.ts
 
-export class ActionLog {
+export default class ActionLog {
   private actions: Action[] = [];
 
   logAction(action: Action) {

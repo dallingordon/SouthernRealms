@@ -1,4 +1,6 @@
 import Player from "./Player";
+import ActionLog from "./ActionLog";
+import EffectManager from "@/model/EffectManager";
 
 export default class GameSession {
   public sessionId: string;
@@ -6,6 +8,7 @@ export default class GameSession {
   public currentTurnIndex: number; // Index in the players array for tracking turns
   public isGameActive: boolean;
   public actionLog: ActionLog;
+  public effectManager: EffectManager;
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
@@ -25,7 +28,7 @@ export default class GameSession {
       player.shuffleDrawPile(); // Shuffle each player's deck
       this.dealCards(player, 12); // Deal 12 cards to each player
     });
-    // Set up any additional game state or turn order logic here
+    this.playerAction();
   }
 
   private dealCards(player: Player, count: number): void {
@@ -33,10 +36,22 @@ export default class GameSession {
       player.drawCard(); // Method from Player class that moves a card from drawPile to hand
     }
   }
+  public playerAction(): void {
+    //use the currentTurnIndex to see who's turn it is
+    //waits for the player to do something to the game state.
+    this.assesGameState();
+  }
 
+  public assessGameState(): void {
+    // perform logic to see if the game is over.  count cards, see who has ceded etc.
+    // if it is over, this.endgame();
+    // else
+    // this.nextTurn();
+  }
   public nextTurn(): void {
     // Move to the next player's turn
     this.currentTurnIndex = (this.currentTurnIndex + 1) % this.players.length;
+    this.playerAction();
     // Handle actions at the start of a new turn, if necessary
   }
 
