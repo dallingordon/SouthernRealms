@@ -1,6 +1,6 @@
 import Player from "./Player";
 import ActionLog from "./ActionLog";
-import EffectManager from "@/model/EffectManager";
+
 
 export default class GameSession {
   public sessionId: string;
@@ -8,7 +8,7 @@ export default class GameSession {
   public currentTurnIndex: number; // Index in the players array for tracking turns
   public isGameActive: boolean;
   public actionLog: ActionLog;
-  public effectManager: EffectManager;
+
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
