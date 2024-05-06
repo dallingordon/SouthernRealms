@@ -17,8 +17,7 @@ When
 	Certain number of rounds
 
 Target
-	
-    No target (add to field)
+
 	Single card target (like sitting on top of, teleporting)
 	Rule (turrets hit highest from previous round)
 	Certain cards (specific card or cards) store as cardids?

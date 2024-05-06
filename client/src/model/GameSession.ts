@@ -1,63 +1,77 @@
 import Player from "./Player";
 import ActionLog from "./ActionLog";
-
+import { CardFunction, executeCardFunction } from "./Card";  // Assume you have a method like this based on your Card setup
 
 export default class GameSession {
   public sessionId: string;
   public players: Array<Player>;
-  public currentTurnIndex: number; // Index in the players array for tracking turns
+  public currentTurnIndex: number;
   public isGameActive: boolean;
   public actionLog: ActionLog;
-
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
     this.players = [];
     this.currentTurnIndex = 0;
     this.isGameActive = false;
+    this.actionLog = new ActionLog();  // Ensure the action log is initialized
   }
 
   public addPlayer(player: Player): void {
     this.players.push(player);
-    // You could implement logic to notify other players or update the game state here
   }
 
   public startGame(): void {
     this.isGameActive = true;
     this.players.forEach(player => {
-      player.shuffleDrawPile(); // Shuffle each player's deck
-      this.dealCards(player, 12); // Deal 12 cards to each player
+      player.shuffleDrawPile();
+      this.dealCards(player, 12);
     });
     this.playerAction();
   }
 
   private dealCards(player: Player, count: number): void {
     for (let i = 0; i < count; i++) {
-      player.drawCard(); // Method from Player class that moves a card from drawPile to hand
+      player.drawCard();
     }
   }
+  // it goes playerAction > assessGameState > nextTurn > playerAction
   public playerAction(): void {
-    //use the currentTurnIndex to see who's turn it is
-    //waits for the player to do something to the game state.
-    this.assesGameState();
+    // Here, you need to determine what action the player is taking.
+    // For example, if they play a card:
+    let playedCard = this.players[this.currentTurnIndex].playCard();
+    if (playedCard) {
+      this.executeCardFunction(playedCard);
+    }
+
+    this.assessGameState();
+  }
+
+  private executeCardFunction(card: Card): void {
+    executeCardFunction(card.functionId, this.actionLog);
   }
 
   public assessGameState(): void {
-    // perform logic to see if the game is over.  count cards, see who has ceded etc.
-    // if it is over, this.endgame();
-    // else
-    // this.nextTurn();
+    // Implementation to check if the game is over
+    if (this.isGameOver()) {
+      this.endGame();
+    } else {
+      this.nextTurn();
+    }
   }
+
+  private isGameOver(): boolean {
+    // Logic to determine if the game is over
+    return false;
+  }
+
   public nextTurn(): void {
-    // Move to the next player's turn
     this.currentTurnIndex = (this.currentTurnIndex + 1) % this.players.length;
     this.playerAction();
-    // Handle actions at the start of a new turn, if necessary
   }
 
   public endGame(): void {
     this.isGameActive = false;
-    // Handle cleanup, calculate final scores, etc.
+    // Handle game cleanup
   }
 }
-
