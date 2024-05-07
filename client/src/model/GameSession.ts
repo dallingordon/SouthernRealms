@@ -1,5 +1,5 @@
 import Player from "./Player";
-import ActionLog from "./ActionLog";
+import Action from "./Action";
 import { CardFunction, executeCardFunction } from "./Card";  // Assume you have a method like this based on your Card setup
 
 export default class GameSession {
@@ -7,14 +7,14 @@ export default class GameSession {
   public players: Array<Player>;
   public currentTurnIndex: number;
   public isGameActive: boolean;
-  public actionLog: ActionLog;
+  public actionLog: Array<Action>; // i think this should just be an array of actions.  then i can just init it as an empty array.....
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
     this.players = [];
     this.currentTurnIndex = 0;
     this.isGameActive = false;
-    this.actionLog = new ActionLog();  // Ensure the action log is initialized
+    this.actionLog = [];  // Ensure the action log is initialized to nuthin
   }
 
   public addPlayer(player: Player): void {
