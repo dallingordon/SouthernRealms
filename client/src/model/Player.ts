@@ -46,4 +46,20 @@ export default class Player {
   public shuffleDrawPile(): void {
     this.drawPile.shuffle();
   }
+
+  public resetPlayer(): void {
+  // Reset the hand, play area, and discard pile by emptying their cards
+  this.hand.cards = [];
+  this.playArea.cards = [];
+  this.discardPile.cards = [];
+
+  const originalCards = DBUtil.getDeck(this.deckId);
+
+  // Reset the draw pile with the original cards
+  this.drawPile.cards = originalCards;
+
+  // Shuffle the draw pile
+  this.shuffleDrawPile();
+}
+
 }

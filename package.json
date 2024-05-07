@@ -1,5 +1,9 @@
 {
   "dependencies": {
+    "firebase-admin": "^12.1.0",
     "react-router-dom": "^6.23.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
   }
 }

@@ -1,10 +1,5 @@
 import {decryptActionBoundArgs} from "next/dist/server/app-render/encryption";
 
-enum CardType {
-  Special,
-  SpecialValue,
-  Flair
-}
 
 export enum CardFunction {
   AddValue = "addValue",
@@ -19,10 +14,9 @@ export enum CardFunction {
 export default class Card {
   public id: string;
   public name: string;
-  public cardId: string;
   public text: string;
   public imgUrl: string;
-  public type: CardType;
+  public type: string;
   public points: number;
   public active: boolean;
   public resolvedPoints: number;
@@ -31,7 +25,6 @@ export default class Card {
   constructor({
     id,
     name,
-    cardId,
     text,
     imgUrl,
     type,
@@ -41,10 +34,9 @@ export default class Card {
   }: {
     id: string;
     name: string;
-    cardId: string;
     text: string;
     imgUrl: string;
-    type: CardType;
+    type: string;
     points?: number;
     active: boolean;
     resolvedPoints?: number;
@@ -52,7 +44,6 @@ export default class Card {
   }) {
     this.id = id;
     this.name = name;
-    this.cardId = cardId;
     this.text = text;
     this.imgUrl = imgUrl;
     this.type = type;
