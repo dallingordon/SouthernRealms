@@ -29,8 +29,32 @@ export default class DBUtil {
     }
   }
   /**  make call to DB to get a deck by ID */
-  public static getDeck(id: string): Array<Card> {
-    return [];
+  public async getDeck(deckName: string): Promise<Card[]> {
+    const deckRef = this.dbRef.child(deckName.replace(" ", "_"));
+
+    const snapshot = await deckRef.once('value');
+    if (snapshot.exists()) {
+      const deckData = snapshot.val();
+      const cards: Card[] = [];
+      for (const key in deckData) {
+        if (deckData.hasOwnProperty(key)) {
+          const cardData = deckData[key];
+          const card = new Card({
+            id: cardData.unique_id,
+            name: cardData.name,
+            text: cardData.text,
+            imgUrl: cardData.filename,
+            type: cardData.type,
+            points: cardData.points
+          });
+          cards.push(card);
+        }
+      }
+      return cards;
+    } else {
+      console.log("Deck not found");
+      return [];
+    }
   }
 
   /** Gamesession interaction */
