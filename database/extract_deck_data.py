@@ -53,7 +53,7 @@ for deck_id, deck_name in decks:
 conn.close()
 
 # Upload to Firebase
-ref = db.reference('decks')
+ref = db.reference('app/decks')
 for deck, cards in deck_data.items():
     deck_ref = ref.child(deck.replace(" ", "_"))  # Replace spaces with underscores for Firebase keys
     card_data = {card['unique_id']: card for card in cards}  # Create a dictionary with unique_id as keys

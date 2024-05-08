@@ -1,6 +1,6 @@
 import Player from "./Player";
 import Action from "./Action";
-import { CardFunction, executeCardFunction } from "./Card";  // Assume you have a method like this based on your Card setup
+
 
 export default class GameSession {
   public sessionId: string;
@@ -41,15 +41,12 @@ export default class GameSession {
     // For example, if they play a card:
     let playedCard = this.players[this.currentTurnIndex].playCard();
     if (playedCard) {
-      this.executeCardFunction(playedCard);
+      // this.executeCardFunction(playedCard);
     }
 
     this.assessGameState();
   }
 
-  private executeCardFunction(card: Card): void {
-    executeCardFunction(card.functionId, this.actionLog);
-  }
 
   public assessGameState(): void {
     // Implementation to check if the game is over

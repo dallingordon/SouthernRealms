@@ -1,6 +1,7 @@
 import Card from "../model/Card";
 
 const admin = require("firebase-admin");
+// import admin from "firebase-admin";
 const serviceAccount = require("../../../auth/southernrealms-f130b-firebase-adminsdk-8gwhx-a87375e558.json"); // Adjust path as necessary
 
 admin.initializeApp({
@@ -11,15 +12,26 @@ admin.initializeApp({
 const db = admin.database();
 
 export default class DBUtil {
-  public dbRef;
+  private basePath: string;
+  private dbRef;
 
-  constructor(basePath: string) {
-    this.dbRef = db.ref(basePath);
+  constructor(basePath: string = "app") {
+    this.basePath = basePath;
+    this.dbRef = db.ref(this.basePath);
   }
 
-    // Method to get all games from the database
+  private getGamesRef() {
+    return this.dbRef.child("games");
+  }
+
+  private getDecksRef() {
+    return this.dbRef.child("decks");
+  }
+
+  // Method to get all games from the database
   public async getAllGames(): Promise<any[]> {
-    const snapshot = await this.dbRef.once('value');
+    const gamesRef = this.getGamesRef();
+    const snapshot = await gamesRef.once('value');
 
     if (snapshot.exists()) {
       return snapshot.val();
@@ -28,11 +40,12 @@ export default class DBUtil {
       return [];
     }
   }
-  /**  make call to DB to get a deck by ID */
-  public async getDeck(deckName: string): Promise<Card[]> {
-    const deckRef = this.dbRef.child(deckName.replace(" ", "_"));
 
+  // Method to get a deck by name
+  public async getDeck(deckName: string): Promise<Card[]> {
+    const deckRef = this.getDecksRef().child(deckName.replace(" ", "_"));
     const snapshot = await deckRef.once('value');
+
     if (snapshot.exists()) {
       const deckData = snapshot.val();
       const cards: Card[] = [];
@@ -57,7 +70,5 @@ export default class DBUtil {
     }
   }
 
-  /** Gamesession interaction */
-
-  /** User auth */
+  /** Additional methods for interaction with games and decks can be added here */
 }
