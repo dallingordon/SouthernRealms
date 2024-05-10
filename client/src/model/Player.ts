@@ -11,18 +11,21 @@ export default class Player {
   public playArea: Deck;
   public discardPile: Pile;
 
-  constructor({ user, deckId }: { user: User; deckId: string }) {
+  constructor({ user, deckId }: { user: User; deckId: string }, callback: (player: Player | null, error?: Error) => void) {
     this.user = user;
     this.deckId = deckId;
 
-    const cards = DBUtil.getDeck(deckId);
+    DBUtil.getDeck(deckId).then(cards => {
+      this.drawPile = new Pile({ id: deckId, cards, cardBackImgUrl: 'url-for-draw-pile', shuffles: true });
+      this.discardPile = new Pile({ id: deckId, cards: [], cardBackImgUrl: 'url-for-discard-pile', shuffles: false });
+      this.hand = new Deck({ id: deckId, cards: [] });
+      this.playArea = new Deck({ id: deckId, cards: [] });
 
-    this.drawPile = new Pile({ id: deckId, cards, cardBackImgUrl: 'url-for-draw-pile', shuffles: true });
-    this.discardPile = new Pile({ id: deckId, cards: [], cardBackImgUrl: 'url-for-discard-pile', shuffles: false });
-    this.hand = new Deck({ id: deckId, cards: [] });
-    this.playArea = new Deck({ id: deckId, cards: [] });
-
-    this.shuffleDrawPile(); // Initial shuffle of the draw pile
+      this.shuffleDrawPile(); // Initial shuffle of the draw pile
+      callback(this);
+    }).catch(error => {
+      callback(null, error);
+    });
   }
 
   public drawCard(): void {

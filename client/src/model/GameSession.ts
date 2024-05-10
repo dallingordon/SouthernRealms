@@ -9,12 +9,16 @@ export default class GameSession {
   public isGameActive: boolean;
   public actionLog: Array<Action>; // i think this should just be an array of actions.  then i can just init it as an empty array.....
 
-  constructor(sessionId: string) {
-    this.sessionId = sessionId;
+  constructor() {
+    this.sessionId = null; // Initialize without an ID
     this.players = [];
     this.currentTurnIndex = 0;
     this.isGameActive = false;
-    this.actionLog = [];  // Ensure the action log is initialized to nuthin
+    this.actionLog = [];
+  }
+
+  private setSessionId(id: string) {
+    this.sessionId = id; // Method to update the session ID later
   }
 
   public addPlayer(player: Player): void {

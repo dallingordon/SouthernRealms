@@ -1,6 +1,6 @@
 import Card from "../model/Card";
-
-const admin = require("firebase-admin");
+import * as admin from 'firebase-admin';  // Use ES6 import
+// const admin = require("firebase-admin");
 // import admin from "firebase-admin";
 const serviceAccount = require("../../../auth/southernrealms-f130b-firebase-adminsdk-8gwhx-a87375e558.json"); // Adjust path as necessary
 
@@ -9,27 +9,41 @@ admin.initializeApp({
   databaseURL: "https://southernrealms-f130b-default-rtdb.firebaseio.com/", // Your Realtime Database URL
 });
 
-const db = admin.database();
+// const db = admin.database();
 
 export default class DBUtil {
-  private basePath: string;
-  private dbRef;
+  private static basePath: string = "app";
+  private static dbRef: admin.database.Reference = admin.database().ref(DBUtil.basePath);
 
   constructor(basePath: string = "app") {
-    this.basePath = basePath;
-    this.dbRef = db.ref(this.basePath);
+    DBUtil.basePath = basePath;
+    DBUtil.dbRef = admin.database().ref(DBUtil.basePath);
   }
 
-  private getGamesRef() {
+  private static getGamesRef() {
     return this.dbRef.child("games");
   }
 
-  private getDecksRef() {
+  private static getDecksRef() {
     return this.dbRef.child("decks");
   }
 
+  private static defaultGameSession = {
+    players: [],            // No players initially
+    gameStatus: 'waiting',  // Initial status, could be 'waiting', 'in-progress', 'completed'
+    currentTurn: 0,         // Track whose turn, 0 when no turns have been made
+    actions: []             // History of actions taken in the game
+  };
+
+  public static async createGameSession(): Promise<string> {
+    const gamesRef = this.getGamesRef();
+    const newSessionRef = gamesRef.push();
+    // Set the initial game session with default values
+    await newSessionRef.set(this.defaultGameSession);
+    return newSessionRef.key as string;  // Assure TypeScript that the key is never null
+  }
   // Method to get all games from the database
-  public async getAllGames(): Promise<any[]> {
+  public static async getAllGames(): Promise<any[]> {
     const gamesRef = this.getGamesRef();
     const snapshot = await gamesRef.once('value');
 
@@ -42,7 +56,7 @@ export default class DBUtil {
   }
 
   // Method to get a deck by name
-  public async getDeck(deckName: string): Promise<Card[]> {
+  public static async getDeck(deckName: string): Promise<Card[]> {
     const deckRef = this.getDecksRef().child(deckName.replace(" ", "_"));
     const snapshot = await deckRef.once('value');
 
