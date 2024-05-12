@@ -16,15 +16,8 @@ interface FirebaseConfig {
 }
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyD9f8k_JjBjvYLes8ZFFB8QgpGMv7BjvuU",
-  authDomain: "southernrealms-f130b.firebaseapp.com",
-  databaseURL: "https://southernrealms-f130b-default-rtdb.firebaseio.com",
-  projectId: "southernrealms-f130b",
-  storageBucket: "southernrealms-f130b.appspot.com",
-  messagingSenderId: "983915765124",
-  appId: "1:983915765124:web:3fe83f5ab50fcc0e7891d1"
-};
+//put the auth here.  don't put it on github doofus
+// revoked it.
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
