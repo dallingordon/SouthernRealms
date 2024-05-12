@@ -1,20 +1,20 @@
 // src/pages/CreateGame.tsx
-
 import React from 'react';
-import { db } from '../firebase/clientApp'; // Adjust the import path to your Firebase client configuration
-import HomeLayout from "@/components/layout/HomeLayout";  // Assuming you might use a similar layout
-import styles from "../styles/pages/CreateGame.module.css"; // Adjust path and name as needed
+import { db, ref, push, set } from '../util/firebaseClient';  // Adjust path as necessary
+import HomeLayout from "@/components/layout/HomeLayout";
+// import styles from "../styles/pages/CreateGame.module.css";
 
-const CreateGame = () => {
+const CreateGame: React.FC = () => {
   const handleCreateGame = async () => {
-    const newGameRef = db.ref('games').push();
-    await newGameRef.set({ players: [], status: 'waiting' });  // Setting initial game data
-    alert('New game created with ID: ' + newGameRef.key);  // Alert or handle the ID as you see fit
+    const gamesRef = ref(db, 'app/games');
+    const newGameRef = push(gamesRef);
+    await set(newGameRef, { players: [], status: 'waiting' });
+    alert('New game created with ID: ' + newGameRef.key);
   };
 
   return (
-    <HomeLayout>  // Reusing the HomeLayout, adjust if different layout is needed
-      <div className={styles.container}>
+    <HomeLayout>
+      <div className="butt">
         <button onClick={handleCreateGame}>Create New Game</button>
       </div>
     </HomeLayout>
