@@ -1,2 +1,5 @@
 # Ignore the SQLite database file
 /database/southernrealms.db
+/auth
+/node_modules
+notes.txt

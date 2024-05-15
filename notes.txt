@@ -1,0 +1,5 @@
+"Firebase Cloud Functions for backend operations in the Southern Realms project"
+5/15
+god i wish i had a job.
+got it to add players! not sure it is, no, i know it isn't making the class.  but i have enough data to init the player and gamesession.
+

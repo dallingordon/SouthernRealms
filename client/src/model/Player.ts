@@ -1,33 +1,31 @@
+import DBUtil from "../util/DBUtil";
 import Deck from "./Deck"; // Assuming Deck class handles individual card management
-
+import User from "./User";
+import Pile from "./Pile"
+/** Player is a User once they have been initialized into a game session */
 export default class Player {
-  public userId: string;
-  public playerName: string;
-  public deck: Deck;
-  public drawPile: Deck;
+  public user: User;
+  public deckId: string;
+  public drawPile: Pile;
   public hand: Deck;
   public playArea: Deck;
-  public discardPile: Deck;
+  public discardPile: Pile;
 
-  constructor({
-    userId,
-    playerName,
-    deck,
-  }: {
-    userId: string;
-    playerName: string;
-    deck: Deck;
-  }) {
-    this.userId = userId;
-    this.playerName = playerName;
-    this.deck = deck;
-    // Initialize each player's card areas using the chosen deck
-    this.drawPile = new Deck({ id: `draw-${userId}`, cards: [...deck.cards] });
-    this.hand = new Deck({ id: `hand-${userId}`, cards: [] });
-    this.playArea = new Deck({ id: `play-${userId}`, cards: [] });
-    this.discardPile = new Deck({ id: `discard-${userId}`, cards: [] });
+  constructor({ user, deckId }: { user: User; deckId: string }, callback: (player: Player | null, error?: Error) => void) {
+    this.user = user;
+    this.deckId = deckId;
 
-    this.shuffleDrawPile(); // Initial shuffle of the draw pile
+    DBUtil.getDeck(deckId).then(cards => {
+      this.drawPile = new Pile({ id: deckId, cards, cardBackImgUrl: 'url-for-draw-pile', shuffles: true });
+      this.discardPile = new Pile({ id: deckId, cards: [], cardBackImgUrl: 'url-for-discard-pile', shuffles: false });
+      this.hand = new Deck({ id: deckId, cards: [] });
+      this.playArea = new Deck({ id: deckId, cards: [] });
+
+      this.shuffleDrawPile(); // Initial shuffle of the draw pile
+      callback(this);
+    }).catch(error => {
+      callback(null, error);
+    });
   }
 
   public drawCard(): void {
@@ -51,4 +49,20 @@ export default class Player {
   public shuffleDrawPile(): void {
     this.drawPile.shuffle();
   }
+
+  public resetPlayer(): void {
+  // Reset the hand, play area, and discard pile by emptying their cards
+  this.hand.cards = [];
+  this.playArea.cards = [];
+  this.discardPile.cards = [];
+
+  const originalCards = DBUtil.getDeck(this.deckId);
+
+  // Reset the draw pile with the original cards
+  this.drawPile.cards = originalCards;
+
+  // Shuffle the draw pile
+  this.shuffleDrawPile();
+}
+
 }
