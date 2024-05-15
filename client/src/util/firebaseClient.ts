@@ -1,26 +1,33 @@
-// src/firebase/firebaseClient.ts
-
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, push, set } from 'firebase/database';
+import { getDatabase, ref, get} from 'firebase/database'; // Import for Realtime Database
 
-// Firebase configuration with TypeScript interface for type checking
-interface FirebaseConfig {
-  apiKey: string;
-  authDomain: string;
-  databaseURL: string;
-  projectId: string;
-  storageBucket: string;
-  messagingSenderId: string;
-  appId: string;
-  measurementId?: string; // Optional: only needed if using Firebase Analytics
-}
+import firebaseConfig from '../../../auth/clientConfig'; // Adjust the path as necessary
 
-// Your web app's Firebase configuration
-//put the auth here.  don't put it on github doofus
-// revoked it.
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const realtimeDb = getDatabase(app); // Reference to Realtime Database
 
-export { db, ref, push, set };
+// Function to fetch decks (Realtime Database)
+const getDecks = async () => {
+  const decksRef = ref(realtimeDb, 'app/decks'); // Reference to the "decks" node
+
+  // Get data once for testing
+  const snapshot = await get(decksRef);
+  const decks = snapshot.val() || []; // Get data or set to empty array
+
+
+  return Object.keys(decks); // Map data to desired format
+};
+
+
+// Function to fetch active games (Realtime Database)
+const getActiveGames = async () => {
+  const gamesRef = ref(realtimeDb, 'app/games'); // Reference to the "games" node
+
+  // Get data once for testing
+  const snapshot = await get(gamesRef);
+  const games = snapshot.val() || []; // Get data or set to empty array
+
+  return Object.keys(games); // Map data to desired format
+};
+
+export { app, getDecks, getActiveGames };

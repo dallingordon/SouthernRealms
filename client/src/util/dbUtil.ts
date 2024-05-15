@@ -1,5 +1,6 @@
 import Card from "../model/Card";
 import * as admin from 'firebase-admin';  // Use ES6 import
+
 // const admin = require("firebase-admin");
 // import admin from "firebase-admin";
 const serviceAccount = require("../../../auth/southernrealms-f130b-firebase-adminsdk-8gwhx-a87375e558.json"); // Adjust path as necessary
@@ -42,6 +43,12 @@ export default class DBUtil {
     await newSessionRef.set(this.defaultGameSession);
     return newSessionRef.key as string;  // Assure TypeScript that the key is never null
   }
+
+  public static async addPlayerToGame(gameId: string, playerData: any): Promise<void> {
+    const playersRef = this.dbRef.child(`games/${gameId}/players`);
+    await playersRef.push(playerData);
+  }
+
   // Method to get all games from the database
   public static async getAllGames(): Promise<any[]> {
     const gamesRef = this.getGamesRef();
@@ -80,6 +87,43 @@ export default class DBUtil {
       return cards;
     } else {
       console.log("Deck not found");
+      return [];
+    }
+  }
+  // Method to get all active games from the database
+  public static async getActiveGames(): Promise<any[]> {
+    const gamesRef = this.getGamesRef();
+    const snapshot = await gamesRef.once('value');
+
+    if (snapshot.exists()) {
+      const gamesData = snapshot.val();
+      const activeGames = [];
+      for (const gameId in gamesData) {
+        if (gamesData.hasOwnProperty(gameId) && gamesData[gameId].gameStatus === 'waiting') {
+          activeGames.push({
+            sessionId: gameId,
+            ...gamesData[gameId]
+          });
+        }
+      }
+      return activeGames;
+    } else {
+      console.log("No active games available");
+      return [];
+    }
+  }
+
+  // Method to get all deck names from the database
+  public static async getDecks(): Promise<string[]> {
+    const deckRef = this.getDecksRef();
+    const snapshot = await deckRef.once('value');
+
+    if (snapshot.exists()) {
+      const decksData = snapshot.val();
+      const deckNames: string[] = Object.keys(decksData);  // Gets all the keys (deck names)
+      return deckNames;
+    } else {
+      console.log("No decks available");
       return [];
     }
   }

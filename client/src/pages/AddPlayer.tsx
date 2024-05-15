@@ -1,56 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../util/firebaseClient'; // Adjust the path as necessary
-import { ref, onValue } from 'firebase/database';
+import { getFunctions, httpsCallable } from "firebase/functions";
+import HomeLayout from "@/components/layout/HomeLayout";
+import { getDecks, getActiveGames } from '../util/firebaseClient';
 
-const AddPlayer = () => {
-  const [playerID, setPlayerID] = useState('');
+function AddPlayer() {
+  const [decks, setDecks] = useState([]);
+  const [games, setGames] = useState([]);
+  const [userId, setUserId] = useState('');
   const [deckId, setDeckId] = useState('');
-  const [gameSessionId, setGameSessionId] = useState('');
-  const [decks, setDecks] = useState<{ id: string, name: string }[]>([]);
+  const [gameId, setGameId] = useState('');
+  const functions = getFunctions();
 
-  // Fetch decks from Firebase
   useEffect(() => {
-    const decksRef = ref(db, 'app/decks');
-    onValue(decksRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedDecks = [];
-      for (const key in data) {
-        loadedDecks.push({ id: key, name: data[key].name }); // Assuming each deck has a 'name'
-      }
-      setDecks(loadedDecks);
-    });
+    const fetchDecksAndGames = async () => {
+      const fetchedDecks = await getDecks();
+      const fetchedGames = await getActiveGames();
+      // Store only necessary data for dropdowns
+      setDecks(fetchedDecks.map(deck => ({ id: deck, name: deck })));
+      setGames(fetchedGames.map(game => ({ sessionId: game })));
+    };
+    fetchDecksAndGames();
   }, []);
 
-  const handleSubmit = async () => {
-    // Logic to initialize Player with selected deck and player ID
-    console.log("Submitting:", playerID, deckId, gameSessionId);
-    // You'll need to replace this with actual logic to create or update a Player in your database
+  const joinGame = async () => {
+    const joinGameFunction = httpsCallable(functions, 'joinGame');
+    try {
+      console.log({ userId, deckId, gameId });
+      const response = await joinGameFunction({ userId, deckId, gameId });
+      console.log('Join game response:', response);
+      alert(`Successfully joined game: ${response.data.gameSession.sessionId}`);
+    } catch (error) {
+      console.error('Error joining game:', error);
+      alert('Failed to join game. Please check the console for more details.');
+    }
   };
 
   return (
-    <div>
-      <h1>Add Player to Game</h1>
-      <input
-        type="text"
-        value={gameSessionId}
-        onChange={(e) => setGameSessionId(e.target.value)}
-        placeholder="Enter Game Session ID"
-      />
-      <input
-        type="text"
-        value={playerID}
-        onChange={(e) => setPlayerID(e.target.value)}
-        placeholder="Enter Player ID"
-      />
-      <select value={deckId} onChange={(e) => setDeckId(e.target.value)}>
-        <option value="">Select a Deck</option>
-        {decks.map(deck => (
-          <option key={deck.id} value={deck.id}>{deck.name}</option>
-        ))}
-      </select>
-      <button onClick={handleSubmit}>Add Player</button>
-    </div>
+    <HomeLayout>
+      <h1>Join a Game</h1>
+      <div>
+        <label>User ID:</label>
+        <input
+          type="text"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+        />
+      </div>
+      <div>
+        <label>Choose a Deck:</label>
+        <select value={deckId} onChange={(e) => setDeckId(e.target.value)}>
+          {decks.map(deck => (
+            <option key={deck.id} value={deck.id}>{deck.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label>Choose a Game:</label>
+        <select value={gameId} onChange={(e) => setGameId(e.target.value)}>
+          {games.map(game => (
+            <option key={game.sessionId} value={game.sessionId}>
+              Game {game.sessionId}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button onClick={joinGame}>Join Game</button>
+    </HomeLayout>
   );
-};
+}
 
 export default AddPlayer;

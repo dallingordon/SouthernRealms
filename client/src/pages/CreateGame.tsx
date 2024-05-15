@@ -1,15 +1,20 @@
-// src/pages/CreateGame.tsx
 import React from 'react';
-import { db, ref, push, set } from '../util/firebaseClient';  // Adjust path as necessary
+import { getFunctions, httpsCallable } from "firebase/functions";
 import HomeLayout from "@/components/layout/HomeLayout";
-// import styles from "../styles/pages/CreateGame.module.css";
+import "../util/firebaseClient"
 
 const CreateGame: React.FC = () => {
   const handleCreateGame = async () => {
-    const gamesRef = ref(db, 'app/games');
-    const newGameRef = push(gamesRef);
-    await set(newGameRef, { players: [], status: 'waiting' });
-    alert('New game created with ID: ' + newGameRef.key);
+    const functions = getFunctions(); // Get a reference to the Firebase Functions service
+    const createGame = httpsCallable(functions, 'createGame');
+
+    try {
+      const result = await createGame(); // Call the createGame function
+      alert('New game created with ID: ' + result.data.sessionId );
+    } catch (error) {
+      console.error('Error creating game:', error);
+      alert('Failed to create game.');
+    }
   };
 
   return (
