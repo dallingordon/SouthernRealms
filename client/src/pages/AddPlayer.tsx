@@ -28,7 +28,7 @@ function AddPlayer() {
       console.log({ userId, deckId, gameId });
       const response = await joinGameFunction({ userId, deckId, gameId });
       console.log('Join game response:', response);
-      alert(`Successfully joined game: ${response.data.gameSession.sessionId}`);
+      alert(`Successfully joined game: ${response}`);
     } catch (error) {
       console.error('Error joining game:', error);
       alert('Failed to join game. Please check the console for more details.');

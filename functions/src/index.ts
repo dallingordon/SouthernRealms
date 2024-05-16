@@ -7,14 +7,6 @@ const corsHandler = cors({origin: true});
 
 admin.initializeApp();
 
-interface GameSession {
-  sessionId: string | null;
-  players: any[]; // Array of any type for now, define Player interface if needed
-  currentTurnIndex: number;
-  isGameActive: boolean;
-  actionLog: any[]; // Array of any type for now, define Action interface if needed
-}
-
 exports.helloWorld = functions.https.onRequest((request, response) => {
   corsHandler(request, response, () => {
     response.send("Hello from Firebase!");
@@ -23,12 +15,10 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 
 
 exports.createGame = functions.https.onCall((data, context) => {
-  const newGame: GameSession = {
+  const newGame: { sessionId: null; currentTurnIndex: number; isGameActive: boolean } = {
     sessionId: null,
-    players: [],
     currentTurnIndex: 0,
-    isGameActive: false,
-    actionLog: []
+    isGameActive: false
   };
 
   return admin.database().ref('app/games').push(newGame)
@@ -61,14 +51,9 @@ exports.joinGame = functions.https.onCall((data, context) => {
 
   return admin.database().ref(`app/games/${gameId}/players`).push(playerData)
     .then(() => {
-      return admin.database().ref(`app/games/${gameId}`).once('value');
+      return gameId
     })
-    .then(snapshot => {
-      const gameSession: GameSession = snapshot.val();
-      gameSession.players.push(playerData); // Simulate adding player in server memory
-      // Normally you would save back to Firebase here if needed
-      return { gameSession };
-    })
+
     .catch(error => {
       console.error('Error joining game:', error);
       throw new functions.https.HttpsError('unknown', 'Failed to join game', error);
