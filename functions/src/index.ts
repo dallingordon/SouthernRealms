@@ -15,9 +15,9 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 
 
 exports.createGame = functions.https.onCall((data, context) => {
-  const newGame: { sessionId: null; currentTurnIndex: number; isGameActive: boolean } = {
+  const newGame: { sessionId: null; currentTurnPlayerId: number; isGameActive: boolean } = {
     sessionId: null,
-    currentTurnIndex: 0,
+    currentTurnPlayerId: 0,
     isGameActive: false
   };
 
@@ -60,3 +60,21 @@ exports.joinGame = functions.https.onCall((data, context) => {
     });
 });
 
+exports.recordMove = functions.https.onCall(async (data, context) => {
+  const { gameSessionId, playerId, cardId } = data;
+
+  if (!gameSessionId || !playerId || !cardId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
+  }
+
+  const movesRef = admin.database().ref(`app/games/${gameSessionId}/moves`);
+  const newMoveRef = movesRef.push();
+
+  await newMoveRef.set({
+    playerId,
+    cardId,
+    timestamp: admin.database.ServerValue.TIMESTAMP,
+  });
+
+  return { success: true };
+});

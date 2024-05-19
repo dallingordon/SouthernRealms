@@ -12,6 +12,9 @@ export default function PlayLayout({
   return (<>
     <SideNav />
     <div>PLAY</div>
+        <main>
+        {children}
+      </main>
   </>
   )
 }
