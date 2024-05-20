@@ -40,16 +40,6 @@ const getPlayerData = async (gameSessionId, playerId) => {
   }
 };
 
-// Function to record a move
-const recordMove = async (gameSessionId, playerId, cardId) => {
-  const movesRef = ref(realtimeDb, `app/games/${gameSessionId}/moves`);
-  const newMoveRef = push(movesRef);
-  await newMoveRef.set({
-    playerId,
-    cardId,
-    timestamp: serverTimestamp(),
-  });
-};
 
 const startGame = async (gameSessionId) => {
   const playersRef = ref(realtimeDb, `app/games/${gameSessionId}/players`);
@@ -114,4 +104,4 @@ const updateCurrentTurnPlayer = async (gameSessionId, currentPlayerId) => {
   });
 };
 
-export { app, getDecks, getActiveGames, getPlayerData, recordMove, startGame, subscribeToGameSession, updateCurrentTurnPlayer };
+export { app, getDecks, getActiveGames, getPlayerData, startGame, subscribeToGameSession, updateCurrentTurnPlayer };

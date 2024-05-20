@@ -36,12 +36,20 @@ const Play = () => {
 
   const handleStartGame = () => {
     if (gameSessionId) {
+      const functions = getFunctions();
+      const shuffle = httpsCallable(functions, 'shuffle');
+
       startGame(gameSessionId)
         .then(() => {
           console.log('Game started successfully');
+
+          return shuffle({ gameSessionId });
+        })
+        .then(() => {
+          console.log('Decks shuffled successfully');
         })
         .catch((error) => {
-          console.error('Error starting game:', error);
+          console.error('Error starting game or shuffling decks:', error);
         });
     }
   };
