@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import HomeLayout from "@/components/layout/HomeLayout";
 import { getDecks, getActiveGames } from '../util/firebaseClient';
+import { useRouter } from 'next/router';
+
 
 function AddPlayer() {
   const [decks, setDecks] = useState([]);
@@ -10,6 +12,7 @@ function AddPlayer() {
   const [deckId, setDeckId] = useState('');
   const [gameId, setGameId] = useState('');
   const functions = getFunctions();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchDecksAndGames = async () => {
@@ -27,8 +30,8 @@ function AddPlayer() {
     try {
       console.log({ userId, deckId, gameId });
       const response = await joinGameFunction({ userId, deckId, gameId });
-      console.log('Join game response:', response);
-      alert(`Successfully joined game: ${response}`);
+      const { playerId } = response.data;
+      router.push(`/play?gameSessionId=${gameId}&playerId=${playerId}`);
     } catch (error) {
       console.error('Error joining game:', error);
       alert('Failed to join game. Please check the console for more details.');

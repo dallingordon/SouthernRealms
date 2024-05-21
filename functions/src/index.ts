@@ -15,9 +15,9 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 
 
 exports.createGame = functions.https.onCall((data, context) => {
-  const newGame: { sessionId: null; currentTurnIndex: number; isGameActive: boolean } = {
+  const newGame: { sessionId: null; currentTurnPlayerId: number; isGameActive: boolean } = {
     sessionId: null,
-    currentTurnIndex: 0,
+    currentTurnPlayerId: 0,
     isGameActive: false
   };
 
@@ -49,14 +49,213 @@ exports.joinGame = functions.https.onCall((data, context) => {
     joinedAt: admin.database.ServerValue.TIMESTAMP
   };
 
-  return admin.database().ref(`app/games/${gameId}/players`).push(playerData)
-    .then(() => {
-      return gameId
-    })
+  const playersRef = admin.database().ref(`app/games/${gameId}/players`);
 
+  return playersRef.push(playerData)
+    .then((newPlayerRef) => {
+      return { gameId, playerId: newPlayerRef.key }; // Return the new player key
+    })
     .catch(error => {
       console.error('Error joining game:', error);
       throw new functions.https.HttpsError('unknown', 'Failed to join game', error);
     });
 });
 
+exports.recordMove = functions.https.onCall(async (data, context) => {
+  const { gameSessionId, playerId, cardId } = data;
+
+  if (!gameSessionId || !playerId || !cardId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
+  }
+
+  const gameSessionRef = admin.database().ref(`app/games/${gameSessionId}`);
+  const movesRef = admin.database().ref(`app/games/${gameSessionId}/moves`);
+  const newMoveRef = movesRef.push();
+
+  const newMoveId = newMoveRef.key;
+
+  // Define types for the updates object
+  type Updates = {
+    [key: string]: any;
+  };
+
+  // Get current firstMoveId and latestMoveId
+  const gameSessionSnapshot = await gameSessionRef.once('value');
+  const gameSession = gameSessionSnapshot.val() as {
+    firstMoveId?: string;
+    latestMoveId?: string;
+  };
+
+  const updates: Updates = {};
+  updates[`moves/${newMoveId}`] = {
+    playerId,
+    cardId,
+    timestamp: admin.database.ServerValue.TIMESTAMP,
+    nextMoveId: null // Initialize nextMoveId as null
+  };
+
+  // If there is no firstMoveId, set it to the new move's ID
+  if (!gameSession.firstMoveId) {
+    updates['firstMoveId'] = newMoveId;
+  }
+
+  // If there is a latestMoveId, update the previous latest move's nextMoveId
+  if (gameSession.latestMoveId) {
+    updates[`moves/${gameSession.latestMoveId}/nextMoveId`] = newMoveId;
+  }
+
+  // Update latestMoveId to the new move's ID
+  updates['latestMoveId'] = newMoveId;
+
+  // Apply all updates in a single transaction
+  await gameSessionRef.update(updates);
+
+  return { success: true };
+});
+
+
+interface Card {
+  id: string;
+  name: string;
+  type: string;
+  points: number;
+}
+
+interface Player {
+  deckId: string;
+  drawId: number;
+  drawPile: Record<string, Card>;
+  hand?: Record<string, Card>;
+}
+
+exports.shuffle = functions.https.onCall(async (data, context) => {
+  const { gameSessionId } = data;
+
+  if (!gameSessionId) {
+    console.error("Game session ID is missing.");
+    throw new functions.https.HttpsError("invalid-argument", "Game session ID is required.");
+  }
+
+  const db = admin.database();
+  const gameSessionRef = db.ref(`app/games/${gameSessionId}`);
+  const playersRef = gameSessionRef.child("players");
+
+  try {
+    const playersSnapshot = await playersRef.once("value");
+    const players: Record<string, Player> = playersSnapshot.val();
+
+    if (!players) {
+      console.error(`No players found in game session ${gameSessionId}.`);
+      throw new functions.https.HttpsError("not-found", "No players found in the game session.");
+    }
+
+    const updates: Record<string, any> = {};
+
+    for (const playerId in players) {
+      const player = players[playerId];
+      const deckId = player.deckId;
+      if (!deckId) {
+        console.error(`Player ${playerId} does not have a deck assigned.`);
+        throw new functions.https.HttpsError("failed-precondition", `Player ${playerId} does not have a deck assigned.`);
+      }
+
+      // Fetch the deck
+      const deckSnapshot = await db.ref(`app/decks/${deckId}`).once("value");
+      const deckData = deckSnapshot.val();
+
+      if (!deckData) {
+        console.error(`Deck ${deckId} not found or has no cards.`);
+        throw new functions.https.HttpsError("not-found", `Deck ${deckId} not found or has no cards.`);
+      }
+
+      console.log(`Deck ${deckId} found with ${Object.keys(deckData).length} cards.`);
+
+      // Convert deckData to an array of cards
+      const cards = Object.keys(deckData).map(cardId => ({ id: cardId, ...deckData[cardId] }));
+
+      // Shuffle the cards
+      const shuffledCards = shuffleArray(cards);
+
+      // Create a linked list order
+      const drawPile: Record<string, Card> = {};
+        shuffledCards.forEach((card, index) => {
+          drawPile[index.toString()] = card;
+        });
+
+// Set drawId to 0
+  updates[`/app/games/${gameSessionId}/players/${playerId}/drawId`] = 0;
+  updates[`/app/games/${gameSessionId}/players/${playerId}/drawPile`] = drawPile;
+
+    }
+
+    // Apply the updates to the database
+    await db.ref().update(updates);
+
+    return { success: true, message: "Players' decks shuffled and draw piles updated." };
+  } catch (error) {
+    console.error("Error shuffling decks and updating draw piles:", error);
+    throw new functions.https.HttpsError("internal", "Failed to shuffle decks and update draw piles.", error);
+  }
+});
+
+function shuffleArray(array: Card[]): Card[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+exports.drawCard = functions.https.onCall(async (data, context) => {
+  const { gameSessionId, playerId } = data;
+
+  if (!gameSessionId || !playerId) {
+    console.error("Game session ID or player ID is missing.");
+    throw new functions.https.HttpsError("invalid-argument", "Game session ID and player ID are required.");
+  }
+
+  const db = admin.database();
+  const playerRef = db.ref(`app/games/${gameSessionId}/players/${playerId}`);
+
+  try {
+    const playerSnapshot = await playerRef.once("value");
+    const player: Player = playerSnapshot.val();
+
+    if (!player) {
+      console.error(`Player ${playerId} not found in game session ${gameSessionId}.`);
+      throw new functions.https.HttpsError("not-found", "Player not found in the game session.");
+    }
+
+    const drawId = player.drawId;
+    const drawPile = player.drawPile;
+    const hand = player.hand || {};
+
+    if (drawPile && drawPile[drawId.toString()]) {
+      const cardToDraw = drawPile[drawId.toString()];
+
+      // Add card to the player's hand using the card's unique id
+      hand[cardToDraw.id] = cardToDraw;
+
+      // Remove card from drawPile
+      delete drawPile[drawId.toString()];
+
+      // Increment drawId
+      const newDrawId = drawId + 1;
+
+      // Update player data in Firebase
+      await playerRef.update({
+        hand,
+        drawPile,
+        drawId: newDrawId,
+      });
+
+      return { success: true, message: "Card drawn successfully.", card: cardToDraw };
+    } else {
+      console.error(`No card found at drawId ${drawId} for player ${playerId}.`);
+      throw new functions.https.HttpsError("failed-precondition", "No card to draw.");
+    }
+  } catch (error) {
+    console.error("Error drawing card:", error);
+    throw new functions.https.HttpsError("internal", "Failed to draw card.", error);
+  }
+});
