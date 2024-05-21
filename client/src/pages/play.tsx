@@ -11,7 +11,9 @@ const Play = () => {
   const [cardId, setCardId] = useState(''); // State to hold the card ID being played
   const [isGameActive, setIsGameActive] = useState(false);
   const [currentTurnPlayerId, setCurrentTurnPlayerId] = useState('');
-
+  const [hand, setHand] = useState([]); // State to hold the player's hand
+ const [selectedCardId, setSelectedCardId] = useState('');
+ 
   useEffect(() => {
     if (gameSessionId && playerId) {
       getPlayerData(gameSessionId, playerId)
@@ -54,15 +56,17 @@ const Play = () => {
     }
   };
 
-  const handlePlayCard = (e) => {
+   const handlePlayCard = (e) => {
     e.preventDefault();
-    if (gameSessionId && playerId && cardId) {
+    if (gameSessionId && playerId && selectedCardId) {
       const functions = getFunctions();
       const recordMove = httpsCallable(functions, 'recordMove');
 
-      recordMove({ gameSessionId, playerId, cardId })
+      recordMove({ gameSessionId, playerId, cardId: selectedCardId })
         .then(() => {
-          setCardId(''); // Clear the card ID field after recording the move
+          // Remove the played card from the hand
+          setHand(hand.filter(card => card.id !== selectedCardId));
+          setSelectedCardId(''); // Clear the selected card ID
           updateCurrentTurnPlayer(gameSessionId, playerId)
             .then(() => {
               console.log('Turn updated successfully');
@@ -77,23 +81,56 @@ const Play = () => {
     }
   };
 
-   return (
+const handleDrawCard = () => {
+    if (gameSessionId && playerId) {
+      const functions = getFunctions();
+      const drawCard = httpsCallable(functions, 'drawCard');
+
+      drawCard({ gameSessionId, playerId })
+        .then((result) => {
+          const newCard = result.data.card;
+          setHand([...hand, newCard]);
+          console.log('Card drawn successfully:', newCard);
+        })
+        .catch((error) => {
+          console.error('Error drawing card:', error);
+        });
+    }
+  };
+
+   const handleCardClick = (cardId) => {
+    setSelectedCardId(cardId);
+  };
+
+  return (
     <PlayLayout>
       <div>
         <h1>Deck ID: {deckId}</h1>
         {deckId ? <p>The deck ID for this player is: {deckId}</p> : <p>Loading deck information...</p>}
         {currentTurnPlayerId === playerId ? (
-          <form onSubmit={handlePlayCard}>
-            <label>
-              Card ID:
-              <input type="text" value={cardId} onChange={handleCardIdChange} required />
-            </label>
-            <button type="submit">Play Card</button>
-          </form>
+          <>
+            <button onClick={handlePlayCard} disabled={!selectedCardId}>Play Card</button>
+          </>
         ) : (
           <p>It's {currentTurnPlayerId}'s turn</p>
         )}
         {!isGameActive && <button onClick={handleStartGame}>Start Game</button>}
+        <button onClick={handleDrawCard}>Draw Card</button>
+        <h2>Hand</h2>
+        <ul>
+          {hand.map((card) => (
+            <li
+              key={card.id}
+              onClick={() => handleCardClick(card.id)}
+              style={{
+                cursor: 'pointer',
+                backgroundColor: card.id === selectedCardId ? 'lightblue' : 'white'
+              }}
+            >
+              {card.id}
+            </li>
+          ))}
+        </ul>
       </div>
     </PlayLayout>
   );
