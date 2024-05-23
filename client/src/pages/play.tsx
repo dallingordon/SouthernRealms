@@ -3,6 +3,10 @@ import { useRouter } from 'next/router';
 import { getPlayerData, startGame, subscribeToGameSession, updateCurrentTurnPlayer } from '../util/firebaseClient'; // Adjust the import path as necessary
 import PlayLayout from "@/components/layout/PlayLayout";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import Hand from '@/components/Play/Hand';
+import PlayerPlayArea from '@/components/Play/PlayerPlayArea';
+import OtherPlayersContainer from '@/components/Play/OtherPlayersContainer';
+
 
 const Play = () => {
   const router = useRouter();
@@ -102,7 +106,7 @@ const Play = () => {
     if (gameSessionId && playerId && selectedCardId) {
       const functions = getFunctions();
       const recordMove = httpsCallable(functions, 'recordMove');
-
+      console.log(otherPlayers);
       recordMove({ gameSessionId, playerId, cardId: selectedCardId })
         .then(() => {
           setSelectedCardId(''); // Clear the selected card ID
@@ -138,9 +142,10 @@ const Play = () => {
     }
   };
 
-  const handleCardClick = (cardId) => {
+  const handleCardClick = (cardId: string) => {
     setSelectedCardId(cardId);
   };
+
 
   return (
     <PlayLayout>
@@ -156,44 +161,16 @@ const Play = () => {
         )}
         {!isGameActive && <button onClick={handleStartGame}>Start Game</button>}
         <button onClick={handleDrawCard}>Draw Card</button>
+
         <h2>Hand</h2>
-        <ul>
-          {hand.map((card) => (
-            <li
-              key={card.id}
-              onClick={() => handleCardClick(card.id)}
-              style={{
-                cursor: 'pointer',
-                backgroundColor: card.id === selectedCardId ? 'lightblue' : 'white'
-              }}
-            >
-              {card.id}
-            </li>
-          ))}
-        </ul>
+        <Hand cards={hand} onCardClick={handleCardClick} />
+
+
         <h2>Play Area</h2>
-        <ul>
-          {playArea.map((cardId) => (
-            <li key={cardId}>
-              {cardId}
-            </li>
-          ))}
-        </ul>
+        <PlayerPlayArea playArea={playArea} />
         <h2>Other Players</h2>
-        {otherPlayers.map((player) => (
-          <div key={player.id}>
-            <h3 style={{ color: currentTurnPlayerId === player.id ? 'lightgreen' : 'black' }}>
-              {player.deckId}
-            </h3>
-            <ul>
-              {player.playArea.map((cardId) => (
-                <li key={cardId}>
-                  {cardId}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <OtherPlayersContainer otherPlayers={otherPlayers} currentTurnPlayerId={currentTurnPlayerId} />
+
       </div>
     </PlayLayout>
   );
