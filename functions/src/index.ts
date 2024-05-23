@@ -1,17 +1,35 @@
 // on the terminal: firebase deploy --only functions
 import * as functions from 'firebase-functions';
-import * as cors from 'cors';
+//import * as cors from 'cors';
 import * as admin from 'firebase-admin';
 
-const corsHandler = cors({origin: true});
+//const corsHandler = cors({origin: true});
 
 admin.initializeApp();
 
-exports.helloWorld = functions.https.onRequest((request, response) => {
-  corsHandler(request, response, () => {
-    response.send("Hello from Firebase!");
-  });
-});
+interface Card {
+  id: string;
+  name: string;
+  type: string;
+  points: number;
+}
+
+interface Player {
+  userId: string;
+  deckId: string;
+  drawId: number;
+  drawPile: Record<string, Card>;
+  hand: Record<string, Card>;
+  playArea: Record<string, {
+    previousCardId?: string;
+    nextCardId?: string;
+  }>;
+  discardPile: Record<string, Card>;
+  firstPlayedCardId?: string;
+  lastPlayedCardId?: string;
+  joinedAt: any; // You might want to specify the exact type for timestamp
+}
+
 
 
 exports.createGame = functions.https.onCall((data, context) => {
@@ -43,9 +61,14 @@ exports.joinGame = functions.https.onCall((data, context) => {
       'required arguments: userId, deckId, and gameId.');
   }
 
-  const playerData = {
+  const playerData: Player = {
     userId,
     deckId,
+    drawId: 0, // Initialize drawId
+    drawPile: {},
+    hand: {},
+    playArea: {},
+    discardPile: {},
     joinedAt: admin.database.ServerValue.TIMESTAMP
   };
 
@@ -61,6 +84,7 @@ exports.joinGame = functions.https.onCall((data, context) => {
     });
 });
 
+
 exports.recordMove = functions.https.onCall(async (data, context) => {
   const { gameSessionId, playerId, cardId } = data;
 
@@ -70,6 +94,7 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
   const gameSessionRef = admin.database().ref(`app/games/${gameSessionId}`);
   const movesRef = admin.database().ref(`app/games/${gameSessionId}/moves`);
+  const playersRef = admin.database().ref(`app/games/${gameSessionId}/players/${playerId}`);
   const newMoveRef = movesRef.push();
 
   const newMoveId = newMoveRef.key;
@@ -85,6 +110,10 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     firstMoveId?: string;
     latestMoveId?: string;
   };
+
+  // Get player's current play area and played card references
+  const playerSnapshot = await playersRef.once('value');
+  const player = playerSnapshot.val() as Player;
 
   const updates: Updates = {};
   updates[`moves/${newMoveId}`] = {
@@ -107,6 +136,43 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   // Update latestMoveId to the new move's ID
   updates['latestMoveId'] = newMoveId;
 
+  // Ensure playArea is initialized if it doesn't exist
+  if (!player.playArea) {
+    player.playArea = {};
+  }
+
+  // Fetch the card object from the player's hand
+  let playedCard = null;
+  if (player.hand && player.hand[cardId]) {
+    playedCard = player.hand[cardId];
+    // Remove the played card from the player's hand
+    updates[`players/${playerId}/hand/${cardId}`] = null;
+  }
+
+  // Update player's play area and played card references
+  if (playedCard) {
+    updates[`players/${playerId}/playArea/${cardId}`] = playedCard;
+  }
+
+  updates[`players/${playerId}/playArea/${cardId}`] = {
+    ...playedCard,
+    previousCardId: player.lastPlayedCardId || null,
+    nextCardId: null // Initialize nextCardId as null
+  };
+
+  // If there is no firstPlayedCardId, set it to the new card's ID
+  if (!player.firstPlayedCardId) {
+    updates[`players/${playerId}/firstPlayedCardId`] = cardId;
+  }
+
+  // If there is a lastPlayedCardId, update the previous last played card's nextCardId
+  if (player.lastPlayedCardId) {
+    updates[`players/${playerId}/playArea/${player.lastPlayedCardId}/nextCardId`] = cardId;
+  }
+
+  // Update lastPlayedCardId to the new card's ID
+  updates[`players/${playerId}/lastPlayedCardId`] = cardId;
+
   // Apply all updates in a single transaction
   await gameSessionRef.update(updates);
 
@@ -114,19 +180,8 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 });
 
 
-interface Card {
-  id: string;
-  name: string;
-  type: string;
-  points: number;
-}
 
-interface Player {
-  deckId: string;
-  drawId: number;
-  drawPile: Record<string, Card>;
-  hand?: Record<string, Card>;
-}
+
 
 exports.shuffle = functions.https.onCall(async (data, context) => {
   const { gameSessionId } = data;
