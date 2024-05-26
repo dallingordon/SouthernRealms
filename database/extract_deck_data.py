@@ -1,12 +1,13 @@
+import os
 import sqlite3
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
+from firebase_admin import credentials, storage, db
 
 # Firebase setup
 cred = credentials.Certificate("../auth/southernrealms-f130b-firebase-adminsdk-8gwhx-a87375e558.json")  # Update with the path to your Firebase credentials file
 firebase_admin.initialize_app(cred, {
-    'databaseURL': "https://southernrealms-f130b-default-rtdb.firebaseio.com/"  # Update with your Firebase database URL
+    'databaseURL': "https://southernrealms-f130b-default-rtdb.firebaseio.com/",
+    'storageBucket': "southernrealms-f130b.appspot.com"  # Use the storage bucket name
 })
 
 # Connect to your SQLite database
@@ -26,6 +27,12 @@ default_type = "Default type"
 default_points = 0
 default_active = True
 
+# Function to get public image URL from Firebase Storage
+def get_public_image_url(filename):
+    bucket_name = "southernrealms-f130b.appspot.com"
+    res = f'https://firebasestorage.googleapis.com/v0/b/{bucket_name}/o/cardImages%2F{filename}?alt=media'
+    return res
+
 for deck_id, deck_name in decks:
     cursor.execute("""
         SELECT c.filename, ds.quantity 
@@ -40,9 +47,10 @@ for deck_id, deck_name in decks:
         base_filename = filename.replace('.jpg', '')
         for i in range(1, quantity + 1):
             unique_id = f"{deck_name}_{base_filename}_{i}"
+            image_url = get_public_image_url(filename)
             card_data = {
                 'unique_id': unique_id,
-                'filename': filename,
+                'filename': image_url,
                 'name': base_filename.replace('_', ' ').title(),
                 'text': default_text,
                 'type': default_type,

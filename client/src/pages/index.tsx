@@ -23,7 +23,5 @@ export default function Home() {
     };
 
   return <HomeLayout> 
-    <div>HOMEee</div>
-     <button id="createGameButton" onClick={createGame}>Create Game</button>
   </HomeLayout>
 }

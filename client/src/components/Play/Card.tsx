@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { getImageUrl } from '../../util/firebaseClient';
 
 interface CardProps {
@@ -11,18 +11,6 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ card, onClick }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchImageUrl = async () => {
-      if (card.imgUrl) {
-        const url = await getImageUrl(card.imgUrl);
-        setImageUrl(url);
-      }
-    };
-    fetchImageUrl();
-  }, [card.imgUrl]);
-
   const handleClick = () => {
     if (onClick) {
       onClick(card.id);
@@ -31,8 +19,8 @@ const Card: React.FC<CardProps> = ({ card, onClick }) => {
 
   return (
     <div style={styles.card} onClick={handleClick}>
-      {imageUrl ? (
-        <img src={imageUrl} alt={`Card ${card.id}`} style={styles.image} />
+      {card.imgUrl ? (
+        <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
       ) : (
         <p>{card.id}</p>
       )}

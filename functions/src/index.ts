@@ -262,11 +262,11 @@ function shuffleArray(array: Card[]): Card[] {
 }
 
 exports.drawCard = functions.https.onCall(async (data, context) => {
-  const { gameSessionId, playerId } = data;
+  const { gameSessionId, playerId, numberOfCards } = data;
 
-  if (!gameSessionId || !playerId) {
-    console.error("Game session ID or player ID is missing.");
-    throw new functions.https.HttpsError("invalid-argument", "Game session ID and player ID are required.");
+  if (!gameSessionId || !playerId || !numberOfCards) {
+    console.error("Game session ID, player ID, or number of cards is missing.");
+    throw new functions.https.HttpsError("invalid-argument", "Game session ID, player ID, and number of cards are required.");
   }
 
   const db = admin.database();
@@ -274,43 +274,47 @@ exports.drawCard = functions.https.onCall(async (data, context) => {
 
   try {
     const playerSnapshot = await playerRef.once("value");
-    const player: Player = playerSnapshot.val();
+    const player = playerSnapshot.val();
 
     if (!player) {
       console.error(`Player ${playerId} not found in game session ${gameSessionId}.`);
       throw new functions.https.HttpsError("not-found", "Player not found in the game session.");
     }
 
-    const drawId = player.drawId;
+    let drawId = player.drawId;
     const drawPile = player.drawPile;
     const hand = player.hand || {};
+    const drawnCards = [];
 
-    if (drawPile && drawPile[drawId.toString()]) {
-      const cardToDraw = drawPile[drawId.toString()];
+    for (let i = 0; i < numberOfCards; i++) {
+      if (drawPile && drawPile[drawId.toString()]) {
+        const cardToDraw = drawPile[drawId.toString()];
 
-      // Add card to the player's hand using the card's unique id
-      hand[cardToDraw.id] = cardToDraw;
+        // Add card to the player's hand using the card's unique id
+        hand[cardToDraw.id] = cardToDraw;
+        drawnCards.push(cardToDraw);
 
-      // Remove card from drawPile
-      delete drawPile[drawId.toString()];
+        // Remove card from drawPile
+        delete drawPile[drawId.toString()];
 
-      // Increment drawId
-      const newDrawId = drawId + 1;
-
-      // Update player data in Firebase
-      await playerRef.update({
-        hand,
-        drawPile,
-        drawId: newDrawId,
-      });
-
-      return { success: true, message: "Card drawn successfully.", card: cardToDraw };
-    } else {
-      console.error(`No card found at drawId ${drawId} for player ${playerId}.`);
-      throw new functions.https.HttpsError("failed-precondition", "No card to draw.");
+        // Increment drawId
+        drawId += 1;
+      } else {
+        console.error(`No card found at drawId ${drawId} for player ${playerId}.`);
+        throw new functions.https.HttpsError("failed-precondition", "No card to draw.");
+      }
     }
+
+    // Update player data in Firebase
+    await playerRef.update({
+      hand,
+      drawPile,
+      drawId,
+    });
+
+    return { success: true, message: `${numberOfCards} cards drawn successfully.`, cards: drawnCards };
   } catch (error) {
-    console.error("Error drawing card:", error);
-    throw new functions.https.HttpsError("internal", "Failed to draw card.", error);
+    console.error("Error drawing cards:", error);
+    throw new functions.https.HttpsError("internal", "Failed to draw cards.", error);
   }
 });

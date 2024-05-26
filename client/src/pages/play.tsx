@@ -93,24 +93,66 @@ const Play = () => {
   };
 
   const handleStartGame = () => {
-    if (gameSessionId) {
-      const functions = getFunctions();
-      const shuffle = httpsCallable(functions, 'shuffle');
+  if (gameSessionId) {
+    const functions = getFunctions();
+    const shuffle = httpsCallable(functions, 'shuffle');
+    const drawCards = httpsCallable(functions, 'drawCard'); // Updated function to draw multiple cards
 
-      startGame(gameSessionId)
-        .then(() => {
-          console.log('Game started successfully');
+    startGame(gameSessionId)
+      .then(() => {
+        console.log('Game started successfully');
+        return shuffle({ gameSessionId });
+      })
+      .then(() => {
+        console.log('Decks shuffled successfully');
 
-          return shuffle({ gameSessionId });
-        })
-        .then(() => {
-          console.log('Decks shuffled successfully');
-        })
-        .catch((error) => {
-          console.error('Error starting game or shuffling decks:', error);
+        // Get all player IDs
+        return new Promise((resolve, reject) => {
+          subscribeToGameSession(gameSessionId, (gameSession) => {
+            resolve(Object.keys(gameSession.players));
+          });
         });
-    }
-  };
+      })
+      .then((playerIds) => {
+        // Function to draw 12 cards for a single player
+        const drawCardsForPlayer = (playerId) => {
+          return drawCards({ gameSessionId, playerId, numberOfCards: 12 });
+        };
+
+        // Function to draw cards for all players sequentially
+        const drawCardsForAllPlayers = (index) => {
+          if (index < playerIds.length) {
+            return drawCardsForPlayer(playerIds[index])
+              .then(() => drawCardsForAllPlayers(index + 1));
+          } else {
+            return Promise.resolve();
+          }
+        };
+
+        return drawCardsForAllPlayers(0);
+      })
+      .then(() => {
+        console.log('Cards drawn successfully for all players');
+        // Update the hand state after all cards are drawn
+        subscribeToGameSession(gameSessionId, (gameSession) => {
+          if (gameSession.players && gameSession.players[playerId]) {
+            const playerData = gameSession.players[playerId];
+            const handWithImages = Object.values(playerData.hand || {}).map(card => ({
+              ...card,
+              imgUrl: card.filename || 'default-image-url'
+            }));
+            setHand(handWithImages);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error('Error starting game or drawing cards:', error);
+      });
+  }
+};
+
+
+
 
   const handlePlayCard = (e) => {
     e.preventDefault();
@@ -136,22 +178,7 @@ const Play = () => {
     }
   };
 
-  const handleDrawCard = () => {
-    if (gameSessionId && playerId) {
-      const functions = getFunctions();
-      const drawCard = httpsCallable(functions, 'drawCard');
 
-      drawCard({ gameSessionId, playerId })
-        .then((result) => {
-          const newCard = result.data.card;
-          setHand([...hand, newCard]);
-          console.log('Card drawn successfully:', newCard);
-        })
-        .catch((error) => {
-          console.error('Error drawing card:', error);
-        });
-    }
-  };
 
   const handleCardClick = (cardId) => {
     setSelectedCardId(cardId);
@@ -170,7 +197,7 @@ const Play = () => {
           <p>It's {currentTurnPlayerId}'s turn</p>
         )}
         {!isGameActive && <button onClick={handleStartGame}>Start Game</button>}
-        <button onClick={handleDrawCard}>Draw Card</button>
+
 
         <h2>Hand</h2>
         <Hand cards={hand} onCardClick={handleCardClick} />
