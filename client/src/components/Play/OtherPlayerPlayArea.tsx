@@ -1,15 +1,22 @@
 import React from 'react';
 
 interface OtherPlayerPlayAreaProps {
-  playArea: Array<string>; // Array of card IDs
+  playArea: Array<{
+    id: string;
+    imgUrl?: string;
+  }>;
 }
 
 const OtherPlayerPlayArea: React.FC<OtherPlayerPlayAreaProps> = ({ playArea }) => {
   return (
     <div style={styles.playArea}>
-      {playArea.map(cardId => (
-        <div key={cardId} style={styles.card}>
-          <p>{cardId}</p>
+      {playArea.map(card => (
+        <div key={card.id} style={styles.card}>
+          {card.imgUrl ? (
+            <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
+          ) : (
+            <p>{card.id}</p>
+          )}
         </div>
       ))}
     </div>
@@ -40,6 +47,12 @@ const styles = {
     fontWeight: 'bold',
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     margin: '3px',
+  } as React.CSSProperties,
+  image: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '5px',
+    objectFit: 'cover', // Ensure the image fits within the card boundaries
   } as React.CSSProperties,
 };
 

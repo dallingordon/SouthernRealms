@@ -7,7 +7,6 @@ import Hand from '@/components/Play/Hand';
 import PlayerPlayArea from '@/components/Play/PlayerPlayArea';
 import OtherPlayersContainer from '@/components/Play/OtherPlayersContainer';
 
-
 const Play = () => {
   const router = useRouter();
   const { gameSessionId, playerId } = router.query; // Extract parameters from query
@@ -36,15 +35,23 @@ const Play = () => {
 
         if (gameSession.players && gameSession.players[playerId]) {
           const playerData = gameSession.players[playerId];
-          setHand(Object.values(playerData.hand || {}));
+          // Ensure each card in hand includes imgUrl
+          const handWithImages = Object.values(playerData.hand || {}).map(card => ({
+            ...card,
+            imgUrl: card.filename || 'default-image-url' // Provide a default image URL if imgUrl is missing
+          }));
+          setHand(handWithImages);
 
           // Reconstruct ordered play area for the current player
           const orderedPlayArea = [];
           let currentCardId = playerData.firstPlayedCardId;
 
           while (currentCardId) {
-            orderedPlayArea.push(currentCardId);
             const currentCard = playerData.playArea[currentCardId];
+            orderedPlayArea.push({
+              id: currentCardId,
+              imgUrl: currentCard.filename || 'default-image-url', // Ensure imgUrl is included
+            });
             currentCardId = currentCard.nextCardId;
           }
 
@@ -60,8 +67,11 @@ const Play = () => {
             let currentCardId = player.firstPlayedCardId;
 
             while (currentCardId) {
-              orderedPlayArea.push(currentCardId);
               const currentCard = player.playArea[currentCardId];
+              orderedPlayArea.push({
+                id: currentCardId,
+                imgUrl: currentCard.filename || 'default-image-url', // Ensure imgUrl is included
+              });
               currentCardId = currentCard.nextCardId;
             }
 
@@ -73,6 +83,7 @@ const Play = () => {
           });
 
         setOtherPlayers(otherPlayersData);
+
       });
     }
   }, [gameSessionId, playerId]);
@@ -142,10 +153,9 @@ const Play = () => {
     }
   };
 
-  const handleCardClick = (cardId: string) => {
+  const handleCardClick = (cardId) => {
     setSelectedCardId(cardId);
   };
-
 
   return (
     <PlayLayout>
@@ -165,12 +175,11 @@ const Play = () => {
         <h2>Hand</h2>
         <Hand cards={hand} onCardClick={handleCardClick} />
 
-
         <h2>Play Area</h2>
         <PlayerPlayArea playArea={playArea} />
+
         <h2>Other Players</h2>
         <OtherPlayersContainer otherPlayers={otherPlayers} currentTurnPlayerId={currentTurnPlayerId} />
-
       </div>
     </PlayLayout>
   );

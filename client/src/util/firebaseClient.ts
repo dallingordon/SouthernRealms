@@ -1,7 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import {getDatabase, ref, get,set, update, push, onValue, serverTimestamp} from 'firebase/database'; // Import for Realtime Database
+import { getStorage, ref as sref, getDownloadURL } from "firebase/storage";
 
-import firebaseConfig from '../../../auth/clientConfig'; // Adjust the path as necessary
+import firebaseConfig from '../../../auth/clientConfig';
+import card from "@/components/Play/Card"; // Adjust the path as necessary
 
 const app = initializeApp(firebaseConfig);
 const realtimeDb = getDatabase(app); // Reference to Realtime Database
@@ -103,5 +105,25 @@ const updateCurrentTurnPlayer = async (gameSessionId, currentPlayerId) => {
     currentTurnPlayerId: nextPlayerId,
   });
 };
+
+
+// Initialize Firebase Storage and Database
+const storage = getStorage();
+const database = getDatabase();
+
+// Function to get the download URL
+export const getImageUrl = async (fileName) => {
+
+  const storageRef = sref(storage, 'cardImages/' + fileName);
+  try {
+    const url = await getDownloadURL(storageRef);
+    return url;
+  } catch (error) {
+    console.error('Error getting download URL:', error);
+  }
+};
+
+
+
 
 export { app, getDecks, getActiveGames, getPlayerData, startGame, subscribeToGameSession, updateCurrentTurnPlayer };

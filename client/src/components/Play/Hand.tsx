@@ -4,6 +4,7 @@ import Card from './Card';
 interface HandProps {
   cards: Array<{
     id: string;
+    imgUrl?: string; // Add imgUrl property
     // Add any other properties you expect in the card object
   }>;
   onCardClick: (id: string) => void; // Add onCardClick prop

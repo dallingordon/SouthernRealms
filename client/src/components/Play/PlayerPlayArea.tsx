@@ -3,6 +3,7 @@ import React from 'react';
 interface PlayerPlayAreaProps {
   playArea: Array<{
     id: string;
+    imgUrl?: string; // Add imgUrl property
     // Add any other properties you expect in the card object
   }>;
 }
@@ -12,7 +13,11 @@ const PlayerPlayArea: React.FC<PlayerPlayAreaProps> = ({ playArea }) => {
     <div style={styles.playArea}>
       {playArea.map(card => (
         <div key={card.id} style={styles.card}>
-          <p>{card.id}</p>
+          {card.imgUrl ? (
+            <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
+          ) : (
+            <p>{card.id}</p>
+          )}
         </div>
       ))}
     </div>
@@ -43,6 +48,12 @@ const styles = {
     fontWeight: 'bold',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     margin: '5px',
+  } as React.CSSProperties,
+  image: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '10px',
+    objectFit: 'cover', // Ensure the image fits within the card boundaries
   } as React.CSSProperties,
 };
 

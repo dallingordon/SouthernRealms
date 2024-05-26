@@ -7,7 +7,7 @@ interface OtherPlayersContainerProps {
     deckId: string;
     playArea: Array<{
       id: string;
-      // Add any other properties you expect in the card object
+      imgUrl?: string;
     }>;
   }>;
   currentTurnPlayerId: string;
