@@ -2,6 +2,8 @@
 import * as functions from 'firebase-functions';
 //import * as cors from 'cors';
 import * as admin from 'firebase-admin';
+import { ClonerEffect } from './util/ClonerEffect';
+import { TurretEffect } from './util/TurretEffect';
 
 //const corsHandler = cors({origin: true});
 
@@ -17,6 +19,7 @@ interface Card {
 interface Player {
   userId: string;
   deckId: string;
+  score: number;
   drawId: number;
   drawPile: Record<string, Card>;
   hand: Record<string, Card>;
@@ -61,9 +64,10 @@ exports.joinGame = functions.https.onCall((data, context) => {
       'required arguments: userId, deckId, and gameId.');
   }
 
-  const playerData: Player = {
+  const playerData: { score: number; drawPile: {}; playArea: {}; discardPile: {}; deckId: any; joinedAt: Object; drawId: number; userId: any; hand: {} } = {
     userId,
     deckId,
+    score: 0,
     drawId: 0, // Initialize drawId
     drawPile: {},
     hand: {},
@@ -99,57 +103,48 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
   const newMoveId = newMoveRef.key;
 
-  // Define types for the updates object
-  type Updates = {
-    [key: string]: any;
-  };
-
-  // Get current firstMoveId and latestMoveId
   const gameSessionSnapshot = await gameSessionRef.once('value');
-  const gameSession = gameSessionSnapshot.val() as {
-    firstMoveId?: string;
-    latestMoveId?: string;
-  };
+  const gameSession = gameSessionSnapshot.val();
 
-  // Get player's current play area and played card references
   const playerSnapshot = await playersRef.once('value');
-  const player = playerSnapshot.val() as Player;
+  const player = playerSnapshot.val();
 
-  const updates: Updates = {};
-  updates[`moves/${newMoveId}`] = {
+  let updates: any = {};
+  const previousMoveId = gameSession.latestMoveId; // Add this line
+
+  const newMoveData: any = {
     playerId,
     cardId,
     timestamp: admin.database.ServerValue.TIMESTAMP,
-    nextMoveId: null // Initialize nextMoveId as null
+    nextMoveId: null
   };
 
-  // If there is no firstMoveId, set it to the new move's ID
+  if (previousMoveId) {
+    newMoveData.previousMoveId = previousMoveId; // Add previousMoveId only if it exists
+  }
+
+  updates[`moves/${newMoveId}`] = newMoveData;
+
   if (!gameSession.firstMoveId) {
     updates['firstMoveId'] = newMoveId;
   }
 
-  // If there is a latestMoveId, update the previous latest move's nextMoveId
   if (gameSession.latestMoveId) {
     updates[`moves/${gameSession.latestMoveId}/nextMoveId`] = newMoveId;
   }
 
-  // Update latestMoveId to the new move's ID
   updates['latestMoveId'] = newMoveId;
 
-  // Ensure playArea is initialized if it doesn't exist
   if (!player.playArea) {
     player.playArea = {};
   }
 
-  // Fetch the card object from the player's hand
   let playedCard = null;
   if (player.hand && player.hand[cardId]) {
     playedCard = player.hand[cardId];
-    // Remove the played card from the player's hand
     updates[`players/${playerId}/hand/${cardId}`] = null;
   }
 
-  // Update player's play area and played card references
   if (playedCard) {
     updates[`players/${playerId}/playArea/${cardId}`] = playedCard;
   }
@@ -157,27 +152,42 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   updates[`players/${playerId}/playArea/${cardId}`] = {
     ...playedCard,
     previousCardId: player.lastPlayedCardId || null,
-    nextCardId: null // Initialize nextCardId as null
+    nextCardId: null
   };
 
-  // If there is no firstPlayedCardId, set it to the new card's ID
   if (!player.firstPlayedCardId) {
     updates[`players/${playerId}/firstPlayedCardId`] = cardId;
   }
 
-  // If there is a lastPlayedCardId, update the previous last played card's nextCardId
   if (player.lastPlayedCardId) {
     updates[`players/${playerId}/playArea/${player.lastPlayedCardId}/nextCardId`] = cardId;
   }
 
-  // Update lastPlayedCardId to the new card's ID
   updates[`players/${playerId}/lastPlayedCardId`] = cardId;
 
-  // Apply all updates in a single transaction
+  // Apply card effects
+  if (playedCard) {
+    if (playedCard.name === 'Cloner') {
+      const clonerEffect = new ClonerEffect();
+      clonerEffect.applyEffect(gameSession, player, cardId);
+      updates[`players/${playerId}/score`] = clonerEffect.recalculateScore(player);
+    } else if (playedCard.name === 'Turret') {
+      const turretEffect = new TurretEffect();
+      const turretUpdates = turretEffect.applyEffect(gameSession, player, cardId);
+      updates = { ...updates, ...turretUpdates };
+    } else {
+      const cardPoints = playedCard.points || 0;
+      const newScore = (player.score || 0) + cardPoints;
+      updates[`players/${playerId}/score`] = newScore;
+    }
+  }
+
   await gameSessionRef.update(updates);
 
   return { success: true };
 });
+
+
 
 
 
@@ -262,11 +272,11 @@ function shuffleArray(array: Card[]): Card[] {
 }
 
 exports.drawCard = functions.https.onCall(async (data, context) => {
-  const { gameSessionId, playerId } = data;
+  const { gameSessionId, playerId, numberOfCards } = data;
 
-  if (!gameSessionId || !playerId) {
-    console.error("Game session ID or player ID is missing.");
-    throw new functions.https.HttpsError("invalid-argument", "Game session ID and player ID are required.");
+  if (!gameSessionId || !playerId || !numberOfCards) {
+    console.error("Game session ID, player ID, or number of cards is missing.");
+    throw new functions.https.HttpsError("invalid-argument", "Game session ID, player ID, and number of cards are required.");
   }
 
   const db = admin.database();
@@ -274,43 +284,47 @@ exports.drawCard = functions.https.onCall(async (data, context) => {
 
   try {
     const playerSnapshot = await playerRef.once("value");
-    const player: Player = playerSnapshot.val();
+    const player = playerSnapshot.val();
 
     if (!player) {
       console.error(`Player ${playerId} not found in game session ${gameSessionId}.`);
       throw new functions.https.HttpsError("not-found", "Player not found in the game session.");
     }
 
-    const drawId = player.drawId;
+    let drawId = player.drawId;
     const drawPile = player.drawPile;
     const hand = player.hand || {};
+    const drawnCards = [];
 
-    if (drawPile && drawPile[drawId.toString()]) {
-      const cardToDraw = drawPile[drawId.toString()];
+    for (let i = 0; i < numberOfCards; i++) {
+      if (drawPile && drawPile[drawId.toString()]) {
+        const cardToDraw = drawPile[drawId.toString()];
 
-      // Add card to the player's hand using the card's unique id
-      hand[cardToDraw.id] = cardToDraw;
+        // Add card to the player's hand using the card's unique id
+        hand[cardToDraw.id] = cardToDraw;
+        drawnCards.push(cardToDraw);
 
-      // Remove card from drawPile
-      delete drawPile[drawId.toString()];
+        // Remove card from drawPile
+        delete drawPile[drawId.toString()];
 
-      // Increment drawId
-      const newDrawId = drawId + 1;
-
-      // Update player data in Firebase
-      await playerRef.update({
-        hand,
-        drawPile,
-        drawId: newDrawId,
-      });
-
-      return { success: true, message: "Card drawn successfully.", card: cardToDraw };
-    } else {
-      console.error(`No card found at drawId ${drawId} for player ${playerId}.`);
-      throw new functions.https.HttpsError("failed-precondition", "No card to draw.");
+        // Increment drawId
+        drawId += 1;
+      } else {
+        console.error(`No card found at drawId ${drawId} for player ${playerId}.`);
+        throw new functions.https.HttpsError("failed-precondition", "No card to draw.");
+      }
     }
+
+    // Update player data in Firebase
+    await playerRef.update({
+      hand,
+      drawPile,
+      drawId,
+    });
+
+    return { success: true, message: `${numberOfCards} cards drawn successfully.`, cards: drawnCards };
   } catch (error) {
-    console.error("Error drawing card:", error);
-    throw new functions.https.HttpsError("internal", "Failed to draw card.", error);
+    console.error("Error drawing cards:", error);
+    throw new functions.https.HttpsError("internal", "Failed to draw cards.", error);
   }
 });

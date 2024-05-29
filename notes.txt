@@ -3,3 +3,5 @@
 god i wish i had a job.
 got it to add players! not sure it is, no, i know it isn't making the class.  but i have enough data to init the player and gamesession.
 
+you can't put a null or empty object onto realtime.  you have to push a thing.  that was annoying
+

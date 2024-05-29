@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { getPlayerData, startGame, subscribeToGameSession, updateCurrentTurnPlayer } from '../util/firebaseClient'; // Adjust the import path as necessary
+import { getPlayerData, startGame, subscribeToGameSession, updateCurrentTurnPlayer } from '../util/firebaseClient';
 import PlayLayout from "@/components/layout/PlayLayout";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import Hand from '@/components/Play/Hand';
+import PlayerPlayArea from '@/components/Play/PlayerPlayArea';
+import OtherPlayersContainer from '@/components/Play/OtherPlayersContainer';
 
 const Play = () => {
   const router = useRouter();
-  const { gameSessionId, playerId } = router.query; // Extract parameters from query
+  const { gameSessionId, playerId } = router.query;
   const [deckId, setDeckId] = useState('');
-  const [cardId, setCardId] = useState(''); // State to hold the card ID being played
+  const [cardId, setCardId] = useState('');
   const [isGameActive, setIsGameActive] = useState(false);
   const [currentTurnPlayerId, setCurrentTurnPlayerId] = useState('');
-  const [hand, setHand] = useState([]); // State to hold the player's hand
+  const [hand, setHand] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState('');
-  const [playArea, setPlayArea] = useState([]); // State to hold the player's play area
-  const [otherPlayers, setOtherPlayers] = useState([]); // State to hold other players' data
+  const [playArea, setPlayArea] = useState({ cards: [], score: 0 }); // Updated state
+  const [otherPlayers, setOtherPlayers] = useState([]); // Updated state
 
   useEffect(() => {
     if (gameSessionId && playerId) {
@@ -32,22 +35,28 @@ const Play = () => {
 
         if (gameSession.players && gameSession.players[playerId]) {
           const playerData = gameSession.players[playerId];
-          setHand(Object.values(playerData.hand || {}));
+          const handWithImages = Object.values(playerData.hand || {}).map(card => ({
+            ...card,
+            imgUrl: card.filename || 'default-image-url'
+          }));
+          setHand(handWithImages);
 
-          // Reconstruct ordered play area for the current player
           const orderedPlayArea = [];
           let currentCardId = playerData.firstPlayedCardId;
 
           while (currentCardId) {
-            orderedPlayArea.push(currentCardId);
             const currentCard = playerData.playArea[currentCardId];
+            orderedPlayArea.push({
+              id: currentCardId,
+              imgUrl: currentCard.filename || 'default-image-url',
+              deactivated: currentCard.deactivated,
+            });
             currentCardId = currentCard.nextCardId;
           }
 
-          setPlayArea(orderedPlayArea);
+          setPlayArea({ cards: orderedPlayArea, score: playerData.score });
         }
 
-        // Gather data for other players
         const otherPlayersData = Object.keys(gameSession.players)
           .filter(id => id !== playerId)
           .map(id => {
@@ -56,8 +65,12 @@ const Play = () => {
             let currentCardId = player.firstPlayedCardId;
 
             while (currentCardId) {
-              orderedPlayArea.push(currentCardId);
               const currentCard = player.playArea[currentCardId];
+              orderedPlayArea.push({
+                id: currentCardId,
+                imgUrl: currentCard.filename || 'default-image-url',
+                deactivated: currentCard.deactivated,
+              });
               currentCardId = currentCard.nextCardId;
             }
 
@@ -65,6 +78,7 @@ const Play = () => {
               id,
               deckId: player.deckId,
               playArea: orderedPlayArea,
+              score: player.score,
             };
           });
 
@@ -81,18 +95,53 @@ const Play = () => {
     if (gameSessionId) {
       const functions = getFunctions();
       const shuffle = httpsCallable(functions, 'shuffle');
+      const drawCards = httpsCallable(functions, 'drawCard');
 
       startGame(gameSessionId)
         .then(() => {
           console.log('Game started successfully');
-
           return shuffle({ gameSessionId });
         })
         .then(() => {
           console.log('Decks shuffled successfully');
+
+          return new Promise((resolve, reject) => {
+            subscribeToGameSession(gameSessionId, (gameSession) => {
+              resolve(Object.keys(gameSession.players));
+            });
+          });
+        })
+        .then((playerIds) => {
+          const drawCardsForPlayer = (playerId) => {
+            return drawCards({ gameSessionId, playerId, numberOfCards: 12 });
+          };
+
+          const drawCardsForAllPlayers = (index) => {
+            if (index < playerIds.length) {
+              return drawCardsForPlayer(playerIds[index])
+                .then(() => drawCardsForAllPlayers(index + 1));
+            } else {
+              return Promise.resolve();
+            }
+          };
+
+          return drawCardsForAllPlayers(0);
+        })
+        .then(() => {
+          console.log('Cards drawn successfully for all players');
+          subscribeToGameSession(gameSessionId, (gameSession) => {
+            if (gameSession.players && gameSession.players[playerId]) {
+              const playerData = gameSession.players[playerId];
+              const handWithImages = Object.values(playerData.hand || {}).map(card => ({
+                ...card,
+                imgUrl: card.filename || 'default-image-url'
+              }));
+              setHand(handWithImages);
+            }
+          });
         })
         .catch((error) => {
-          console.error('Error starting game or shuffling decks:', error);
+          console.error('Error starting game or drawing cards:', error);
         });
     }
   };
@@ -102,10 +151,10 @@ const Play = () => {
     if (gameSessionId && playerId && selectedCardId) {
       const functions = getFunctions();
       const recordMove = httpsCallable(functions, 'recordMove');
-
+      console.log(otherPlayers);
       recordMove({ gameSessionId, playerId, cardId: selectedCardId })
         .then(() => {
-          setSelectedCardId(''); // Clear the selected card ID
+          setSelectedCardId('');
           updateCurrentTurnPlayer(gameSessionId, playerId)
             .then(() => {
               console.log('Turn updated successfully');
@@ -117,23 +166,6 @@ const Play = () => {
         .catch((error) => {
           console.error('Error recording move:', error);
           console.log(cardId, gameSessionId, playerId);
-        });
-    }
-  };
-
-  const handleDrawCard = () => {
-    if (gameSessionId && playerId) {
-      const functions = getFunctions();
-      const drawCard = httpsCallable(functions, 'drawCard');
-
-      drawCard({ gameSessionId, playerId })
-        .then((result) => {
-          const newCard = result.data.card;
-          setHand([...hand, newCard]);
-          console.log('Card drawn successfully:', newCard);
-        })
-        .catch((error) => {
-          console.error('Error drawing card:', error);
         });
     }
   };
@@ -155,45 +187,15 @@ const Play = () => {
           <p>It's {currentTurnPlayerId}'s turn</p>
         )}
         {!isGameActive && <button onClick={handleStartGame}>Start Game</button>}
-        <button onClick={handleDrawCard}>Draw Card</button>
+
         <h2>Hand</h2>
-        <ul>
-          {hand.map((card) => (
-            <li
-              key={card.id}
-              onClick={() => handleCardClick(card.id)}
-              style={{
-                cursor: 'pointer',
-                backgroundColor: card.id === selectedCardId ? 'lightblue' : 'white'
-              }}
-            >
-              {card.id}
-            </li>
-          ))}
-        </ul>
+        <Hand cards={hand} onCardClick={handleCardClick} />
+
         <h2>Play Area</h2>
-        <ul>
-          {playArea.map((cardId) => (
-            <li key={cardId}>
-              {cardId}
-            </li>
-          ))}
-        </ul>
+        <PlayerPlayArea playArea={playArea.cards} score={playArea.score} />
+
         <h2>Other Players</h2>
-        {otherPlayers.map((player) => (
-          <div key={player.id}>
-            <h3 style={{ color: currentTurnPlayerId === player.id ? 'lightgreen' : 'black' }}>
-              {player.deckId}
-            </h3>
-            <ul>
-              {player.playArea.map((cardId) => (
-                <li key={cardId}>
-                  {cardId}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <OtherPlayersContainer otherPlayers={otherPlayers} currentTurnPlayerId={currentTurnPlayerId} />
       </div>
     </PlayLayout>
   );
