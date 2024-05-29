@@ -1,5 +1,5 @@
 export interface CardEffect {
-    applyEffect(gameState: any, player: any, cardId: string): void;
-    undoEffect?(gameState: any, player: any, cardId: string): void;
+    applyEffect(gameState: any, playerId: string, cardId: string): void;
+    undoEffect?(gameState: any, playerId: string, cardId: string): void;
     recalculateScore?(player: any): number;
 }

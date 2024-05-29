@@ -165,15 +165,46 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
   updates[`players/${playerId}/lastPlayedCardId`] = cardId;
 
+  function calculateScore(gameSession: any, playerId: string): number {
+    const player = gameSession.players[playerId];
+    let totalScore = 0;
+
+    Object.values(player.playArea as Record<string, any>).forEach((card: any) => {
+        if (card.deactivated) return;
+
+        let currentPoints = card.basePoints || card.points; // Assuming basePoints is the initial points before any effects
+
+        if (card.appliedEffects) {
+            const effects = Object.values(card.appliedEffects);
+            effects.forEach((effect: any) => {
+                if (effect.action === "multiply") {
+                    currentPoints *= effect.value;
+                } else if (effect.action === "add") {
+                    currentPoints += effect.value;
+                } else if (effect.action === "subtract") {
+                    currentPoints -= effect.value;
+                }
+            });
+        }
+
+        totalScore += currentPoints;
+    });
+
+    return totalScore;
+}
+
+
   // Apply card effects
   if (playedCard) {
     if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
-      clonerEffect.applyEffect(gameSession, player, cardId);
-      updates[`players/${playerId}/score`] = clonerEffect.recalculateScore(player);
+      const { updates: clonerUpdates, userIdToDouble } = clonerEffect.applyEffect(gameSession, playerId, cardId);
+      updates = { ...updates, ...clonerUpdates };
+      updates[`players/${userIdToDouble}/score`] = calculateScore(gameSession, userIdToDouble);
+
     } else if (playedCard.name === 'Turret') {
       const turretEffect = new TurretEffect();
-      const turretUpdates = turretEffect.applyEffect(gameSession, player, cardId);
+      const turretUpdates = turretEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...turretUpdates };
     } else {
       const cardPoints = playedCard.points || 0;

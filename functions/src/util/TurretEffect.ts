@@ -1,8 +1,8 @@
 import { CardEffect } from './CardEffect';
 
 export class TurretEffect implements CardEffect {
-    applyEffect(gameState: any, player: any, cardId: string): any {
-        const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, player);
+    applyEffect(gameState: any, playerId: string, cardId: string): any {
+        const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, playerId);
         // console.log("applicable cards", cardsSinceLastTurn);
 
         const updates: any = {};
@@ -21,7 +21,7 @@ export class TurretEffect implements CardEffect {
             if (card.points === highestValue) {
 
                 updates[`players/${card.playerId}/playArea/${card.id}/deactivated`] = true;
-                player = gameState.players[card.playerId];
+                const player = gameState.players[playerId];
                 updates[`players/${card.playerId}/score`] = player.score - card.points;
 
             }
@@ -32,10 +32,10 @@ export class TurretEffect implements CardEffect {
     }
 
 
-    getCardsSinceLastTurn(gameState: any, player: any): any[] {
+    getCardsSinceLastTurn(gameState: any, playerId: string): any[] {
         const cardsSinceLastTurn: any[] = [];
         let moveId = gameState.latestMoveId;
-        let thisPlayerId = gameState.currentTurnPlayerId;
+        let thisPlayerId = playerId;
 
         while (moveId) {
             const move = gameState.moves[moveId];
