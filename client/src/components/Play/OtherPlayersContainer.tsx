@@ -8,7 +8,9 @@ interface OtherPlayersContainerProps {
     playArea: Array<{
       id: string;
       imgUrl?: string;
+      deactivated?: boolean;
     }>;
+    score: number;
   }>;
   currentTurnPlayerId: string;
 }
@@ -21,7 +23,7 @@ const OtherPlayersContainer: React.FC<OtherPlayersContainerProps> = ({ otherPlay
           <h3 style={{ color: currentTurnPlayerId === player.id ? 'lightgreen' : 'black' }}>
             {player.deckId}
           </h3>
-          <OtherPlayerPlayArea playArea={player.playArea} />
+          <OtherPlayerPlayArea playArea={player.playArea} score={player.score} />
         </div>
       ))}
     </div>

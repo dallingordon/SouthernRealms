@@ -1,30 +1,39 @@
 import React from 'react';
+import Card from './Card'; // Ensure the correct path to the Card component
 
 interface PlayerPlayAreaProps {
   playArea: Array<{
     id: string;
-    imgUrl?: string; // Add imgUrl property
-    // Add any other properties you expect in the card object
+    imgUrl?: string;
+    deactivated?: boolean; // Add deactivated property
   }>;
+  score: number;
 }
 
-const PlayerPlayArea: React.FC<PlayerPlayAreaProps> = ({ playArea }) => {
+const PlayerPlayArea: React.FC<PlayerPlayAreaProps> = ({ playArea, score }) => {
   return (
-    <div style={styles.playArea}>
-      {playArea.map(card => (
-        <div key={card.id} style={styles.card}>
-          {card.imgUrl ? (
-            <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
-          ) : (
-            <p>{card.id}</p>
-          )}
-        </div>
-      ))}
+    <div style={styles.playAreaContainer}>
+      <p style={styles.score}>Score: {score}</p>
+      <div style={styles.playArea}>
+        {playArea.map(card => (
+          <Card key={card.id} card={card} />
+        ))}
+      </div>
     </div>
   );
 };
 
 const styles = {
+  playAreaContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  } as React.CSSProperties,
+  score: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    marginBottom: '10px',
+  } as React.CSSProperties,
   playArea: {
     display: 'flex',
     flexDirection: 'row',
@@ -35,25 +44,6 @@ const styles = {
     borderRadius: '10px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     marginTop: '20px',
-  } as React.CSSProperties,
-  card: {
-    width: '100px',
-    height: '150px',
-    backgroundColor: 'green',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontWeight: 'bold',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    margin: '5px',
-  } as React.CSSProperties,
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: '10px',
-    objectFit: 'cover', // Ensure the image fits within the card boundaries
   } as React.CSSProperties,
 };
 

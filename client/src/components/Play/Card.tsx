@@ -4,10 +4,10 @@ import { getImageUrl } from '../../util/firebaseClient';
 interface CardProps {
   card: {
     id: string;
-    imgUrl?: string; // Add imgUrl property
-    // Add any other properties you expect in the card object
+    imgUrl?: string;
+    deactivated?: boolean; // Add deactivated property
   };
-  onClick?: (id: string) => void; // Add onClick prop
+  onClick?: (id: string) => void;
 }
 
 const Card: React.FC<CardProps> = ({ card, onClick }) => {
@@ -18,9 +18,15 @@ const Card: React.FC<CardProps> = ({ card, onClick }) => {
   };
 
   return (
-    <div style={styles.card} onClick={handleClick}>
+    <div
+      style={{
+        ...styles.card,
+        transform: card.deactivated ? 'rotate(90deg)' : 'none' // Apply rotation if deactivated
+      }}
+      onClick={handleClick}
+    >
       {card.imgUrl ? (
-        <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
+        <img src={card.imgUrl} alt={`Card ${card.id}`}  style={styles.image}  />
       ) : (
         <p>{card.id}</p>
       )}
@@ -41,13 +47,14 @@ const styles = {
     fontWeight: 'bold',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     margin: '5px',
-    cursor: 'pointer' // Add cursor style to indicate clickable
+    cursor: 'pointer',
+    transition: 'transform 0.3s ease-in-out' // Add transition for smooth rotation
   } as React.CSSProperties,
   image: {
     width: '100%',
     height: '100%',
     borderRadius: '10px',
-    objectFit: 'cover' // Ensure the image fits within the card boundaries
+    objectFit: 'cover'
   } as React.CSSProperties,
 };
 

@@ -35,7 +35,7 @@ def get_public_image_url(filename):
 
 for deck_id, deck_name in decks:
     cursor.execute("""
-        SELECT c.filename, ds.quantity 
+        SELECT c.filename, ds.quantity, c.points
         FROM cards c
         JOIN decksetup ds ON c.id = ds.cardid
         WHERE ds.deckid = ?
@@ -43,7 +43,7 @@ for deck_id, deck_name in decks:
     cards = cursor.fetchall()
 
     deck_data[deck_name] = []
-    for filename, quantity in cards:
+    for filename, quantity, points in cards:
         base_filename = filename.replace('.jpg', '')
         for i in range(1, quantity + 1):
             unique_id = f"{deck_name}_{base_filename}_{i}"
@@ -54,7 +54,7 @@ for deck_id, deck_name in decks:
                 'name': base_filename.replace('_', ' ').title(),
                 'text': default_text,
                 'type': default_type,
-                'points': default_points
+                'points': points
             }
             deck_data[deck_name].append(card_data)
 

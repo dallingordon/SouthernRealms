@@ -4,26 +4,48 @@ interface OtherPlayerPlayAreaProps {
   playArea: Array<{
     id: string;
     imgUrl?: string;
+    deactivated?: boolean;
   }>;
+  score: number;
 }
 
-const OtherPlayerPlayArea: React.FC<OtherPlayerPlayAreaProps> = ({ playArea }) => {
+const OtherPlayerPlayArea: React.FC<OtherPlayerPlayAreaProps> = ({ playArea, score }) => {
   return (
-    <div style={styles.playArea}>
-      {playArea.map(card => (
-        <div key={card.id} style={styles.card}>
-          {card.imgUrl ? (
-            <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
-          ) : (
-            <p>{card.id}</p>
-          )}
-        </div>
-      ))}
+    <div style={styles.playAreaContainer}>
+      <p style={styles.score}>Score: {score}</p>
+      <div style={styles.playArea}>
+        {playArea.map(card => (
+          <div
+            key={card.id}
+            style={{
+              ...styles.card,
+              transform: card.deactivated ? 'rotate(90deg)' : 'none', // Apply rotation if deactivated
+              transition: 'transform 0.3s ease-in-out', // Smooth transition
+            }}
+          >
+            {card.imgUrl ? (
+              <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
+            ) : (
+              <p>{card.id}</p>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
 const styles = {
+  playAreaContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  } as React.CSSProperties,
+  score: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    marginBottom: '5px',
+  } as React.CSSProperties,
   playArea: {
     display: 'flex',
     flexDirection: 'row',
@@ -52,7 +74,7 @@ const styles = {
     width: '100%',
     height: '100%',
     borderRadius: '5px',
-    objectFit: 'cover', // Ensure the image fits within the card boundaries
+    objectFit: 'cover',
   } as React.CSSProperties,
 };
 
