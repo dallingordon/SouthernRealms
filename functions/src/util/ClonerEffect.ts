@@ -7,9 +7,10 @@ interface EffectNode {
 }
 
 export class ClonerEffect implements CardEffect {
-    applyEffect(gameState: any, playerId: string, clonerCardId: string): { updates: any, userIdToDouble: string } {
+    applyEffect(gameState: any, playerId: string, clonerCardId: string): { updates: any, userIdToDouble: string[]  } {
         const updates: any = {};
-        const userIdToDouble = playerId; // Assuming player has an id property
+        const userIdToDouble: string[] = []; // Assuming player has an id property
+        userIdToDouble.push(playerId);
         const player = gameState.players[playerId];
         // worked.  now i need to make this a linked list and i need to keep firsteffect and latestEffect.  manage all that.
         Object.values(player.playArea as Record<string, any>).forEach((card: any) => {

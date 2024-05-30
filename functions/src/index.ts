@@ -4,7 +4,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { ClonerEffect } from './util/ClonerEffect';
 import { TurretEffect } from './util/TurretEffect';
-
+import { TeleporterEffect} from "./util/TeleporterEffect";
 //const corsHandler = cors({origin: true});
 
 admin.initializeApp();
@@ -159,7 +159,7 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     updates[`players/${playerId}/firstPlayedCardId`] = cardId;
   }
 
-  if (player.lastPlayedCardId) {
+  if (player.lastPlayedCardId && player.hand[cardId].name != "Teleporter") { //added this since teleporter pulls this card up
     updates[`players/${playerId}/playArea/${player.lastPlayedCardId}/nextCardId`] = cardId;
   }
 
@@ -203,11 +203,16 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
       const clonerEffect = new ClonerEffect();
       const { updates: clonerUpdates, userIdToDouble } = clonerEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...clonerUpdates };
-      scoreUpdates.add(userIdToDouble);
+      userIdToDouble.forEach(userId => scoreUpdates.add(userId));
     } else if (playedCard.name === 'Turret') {
       const turretEffect = new TurretEffect();
       const { updates: turretUpdates, userIdsToUpdate } = turretEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...turretUpdates };
+      userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
+    } else if (playedCard.name === 'Teleporter') {
+      const teleporterEffect = new TeleporterEffect();
+      const { updates: teleporterUpdates, userIdsToUpdate } = teleporterEffect.applyEffect(gameSession, playerId, cardId);
+      updates = { ...updates, ...teleporterUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else {
       scoreUpdates.add(playerId);
