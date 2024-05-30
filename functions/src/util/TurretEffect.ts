@@ -1,14 +1,13 @@
 import { CardEffect } from './CardEffect';
 
 export class TurretEffect implements CardEffect {
-    applyEffect(gameState: any, player: any, cardId: string): any {
-        const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, player);
-        // console.log("applicable cards", cardsSinceLastTurn);
-
+    applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+        const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, playerId);
         const updates: any = {};
-
+        const userIdsToUpdate: string[] = [];
+        //console.log("cards since",cardsSinceLastTurn);
         if (cardsSinceLastTurn.length === 0) {
-            return {};
+            return { updates, userIdsToUpdate };
         }
 
         // Find the highest value card(s)
@@ -19,26 +18,25 @@ export class TurretEffect implements CardEffect {
         // Deactivate all cards with the highest value
         cardsSinceLastTurn.forEach((card: any) => {
             if (card.points === highestValue) {
-
                 updates[`players/${card.playerId}/playArea/${card.id}/deactivated`] = true;
-                player = gameState.players[card.playerId];
-                updates[`players/${card.playerId}/score`] = player.score - card.points;
 
+                userIdsToUpdate.push(card.playerId);
             }
-
         });
-
-        return updates;
+        console.log("users in turret",userIdsToUpdate);
+        return { updates, userIdsToUpdate };
     }
 
 
-    getCardsSinceLastTurn(gameState: any, player: any): any[] {
+    getCardsSinceLastTurn(gameState: any, playerId: string): any[] {
         const cardsSinceLastTurn: any[] = [];
         let moveId = gameState.latestMoveId;
-        let thisPlayerId = gameState.currentTurnPlayerId;
+        let thisPlayerId = playerId;
 
         while (moveId) {
+            //console.log("moveid",moveId);
             const move = gameState.moves[moveId];
+            //console.log("moveid",moveId,"player:",move.playerId, "thisPlayerId",thisPlayerId );
             if (!move || move.playerId === thisPlayerId) break;
             if (move.cardId && gameState.players[move.playerId]?.playArea[move.cardId]) {
                 let card = gameState.players[move.playerId].playArea[move.cardId]

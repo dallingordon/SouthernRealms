@@ -165,26 +165,78 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
   updates[`players/${playerId}/lastPlayedCardId`] = cardId;
 
-  // Apply card effects
+  function calculateScore(gameSession: any, playerId: string): number {
+    const player = gameSession.players[playerId];
+    let totalScore = 0;
+    console.log("calculating score playerid",playerId);
+    Object.values(player.playArea as Record<string, any>).forEach((card: any) => {
+      let currentPoints = card.points;
+
+      if (card.deactivated) {
+          currentPoints = 0;
+      } else if (card.appliedEffects) {
+            const effects = Object.values(card.appliedEffects);
+            effects.forEach((effect: any) => {
+                if (effect.action === "multiply") {
+                    currentPoints *= effect.value;
+                } else if (effect.action === "add") {
+                    currentPoints += effect.value;
+                } else if (effect.action === "subtract") {
+                    currentPoints -= effect.value;
+                }
+            });
+        }
+
+        totalScore += currentPoints;
+    });
+
+    return totalScore;
+  }
+
+
+  // Apply card effects and update scores
+
+  let scoreUpdates: Set<string> = new Set<string>();
+
   if (playedCard) {
     if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
-      clonerEffect.applyEffect(gameSession, player, cardId);
-      updates[`players/${playerId}/score`] = clonerEffect.recalculateScore(player);
+      const { updates: clonerUpdates, userIdToDouble } = clonerEffect.applyEffect(gameSession, playerId, cardId);
+      updates = { ...updates, ...clonerUpdates };
+      scoreUpdates.add(userIdToDouble);
     } else if (playedCard.name === 'Turret') {
       const turretEffect = new TurretEffect();
-      const turretUpdates = turretEffect.applyEffect(gameSession, player, cardId);
+      const { updates: turretUpdates, userIdsToUpdate } = turretEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...turretUpdates };
+      userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else {
-      const cardPoints = playedCard.points || 0;
-      const newScore = (player.score || 0) + cardPoints;
-      updates[`players/${playerId}/score`] = newScore;
+      scoreUpdates.add(playerId);
     }
   }
 
+  // Update the game session with the gathered updates
+  await gameSessionRef.update(updates);
+
+  // Refresh the game session state after updates
+  const updatedGameSessionSnapshot = await gameSessionRef.once('value');
+  const updatedGameSession = updatedGameSessionSnapshot.val();
+
+  // Calculate and update scores based on the updated game session state
+  updates = {};
+  scoreUpdates.forEach(userId => {
+    if (updatedGameSession.players[userId]) {
+      updatedGameSession.players[userId].score = calculateScore(updatedGameSession, userId);
+    }
+    updates[`players/${userId}/score`] = calculateScore(updatedGameSession, userId);
+  });
+
+  // Update the game session with the recalculated scores
   await gameSessionRef.update(updates);
 
   return { success: true };
+
+
+
 });
 
 
