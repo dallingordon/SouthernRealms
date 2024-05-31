@@ -1,13 +1,16 @@
-import { CardEffect } from './CardEffect';
+import { CardEffect, removeCardEffects } from './CardEffect';
 
 export class TeleporterEffect implements CardEffect {
   applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
-    const updates: any = {};
+    let updates: any = {};
     const userIdsToUpdate: string[] = [];
 
     const player = gameState.players[playerId];
     const lastCardId = player.lastPlayedCardId;
     const lastCard = player.playArea[lastCardId];
+
+    const effectRemovalUpdates = removeCardEffects(gameState, playerId, lastCardId);
+    updates = { ...updates, ...effectRemovalUpdates };
 
     if (!lastCard) {
       console.log("x");
@@ -39,6 +42,8 @@ export class TeleporterEffect implements CardEffect {
     if (player.firstPlayedCardId === lastCardId) {
       updates[`players/${playerId}/firstPlayedCardId`] = cardId;
     }
+
+
 
     userIdsToUpdate.push(playerId);
 

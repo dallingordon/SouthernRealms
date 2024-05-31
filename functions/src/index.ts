@@ -201,9 +201,9 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   if (playedCard) {
     if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
-      const { updates: clonerUpdates, userIdToDouble } = clonerEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: clonerUpdates, userIdsToUpdate } = clonerEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...clonerUpdates };
-      userIdToDouble.forEach(userId => scoreUpdates.add(userId));
+      userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else if (playedCard.name === 'Turret') {
       const turretEffect = new TurretEffect();
       const { updates: turretUpdates, userIdsToUpdate } = turretEffect.applyEffect(gameSession, playerId, cardId);
