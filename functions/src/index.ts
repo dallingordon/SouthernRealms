@@ -223,7 +223,7 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
     if (specialEffect) {
       // Apply the special effect
-      const { updates: specialUpdates, userIdsToUpdate } = specialEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: specialUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...specialUpdates };
       userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
     } else {
@@ -232,17 +232,17 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     }
   } else if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
-      const { updates: clonerUpdates, userIdsToUpdate } = clonerEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: clonerUpdates, userIdsToUpdate } = await clonerEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...clonerUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else if (playedCard.name === 'Turret') {
       const turretEffect = new TurretEffect();
-      const { updates: turretUpdates, userIdsToUpdate } = turretEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: turretUpdates, userIdsToUpdate } = await turretEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...turretUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else if (playedCard.name === 'Teleporter') {
       const teleporterEffect = new TeleporterEffect();
-      const { updates: teleporterUpdates, userIdsToUpdate } = teleporterEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: teleporterUpdates, userIdsToUpdate } = await teleporterEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...teleporterUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else {
@@ -359,7 +359,8 @@ function shuffleArray(array: Card[]): Card[] {
   return array;
 }
 
-exports.drawCard = functions.https.onCall(async (data, context) => {
+// this signature right here lets you call this function from the deck effect classes.
+export const drawCardFunction = async (data: { gameSessionId: string, playerId: string, numberOfCards: number }) => {
   const { gameSessionId, playerId, numberOfCards } = data;
 
   if (!gameSessionId || !playerId || !numberOfCards) {
@@ -415,4 +416,7 @@ exports.drawCard = functions.https.onCall(async (data, context) => {
     console.error("Error drawing cards:", error);
     throw new functions.https.HttpsError("internal", "Failed to draw cards.", error);
   }
-});
+}
+
+exports.drawCard = functions.https.onCall(drawCardFunction);
+

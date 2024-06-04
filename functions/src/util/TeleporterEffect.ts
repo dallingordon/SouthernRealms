@@ -1,7 +1,7 @@
 import { CardEffect, removeCardEffects } from './CardEffect';
 
 export class TeleporterEffect implements CardEffect {
-  applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+  applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }> {
     let updates: any = {};
     const userIdsToUpdate: string[] = [];
 
@@ -47,6 +47,6 @@ export class TeleporterEffect implements CardEffect {
 
     userIdsToUpdate.push(playerId);
 
-    return { updates, userIdsToUpdate };
+    return Promise.resolve({ updates, userIdsToUpdate });
   }
 }

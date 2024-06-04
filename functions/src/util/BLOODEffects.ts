@@ -1,7 +1,7 @@
 import { CardEffect } from './CardEffect';
 
 export class BloodEffect1 implements CardEffect {
-  applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+  applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }> {
     console.log(`Applying BloodEffect1 for player ${playerId} with card ${cardId}`);
 
     const updates: any = {};
@@ -9,12 +9,12 @@ export class BloodEffect1 implements CardEffect {
     userIdsToUpdate.push(playerId);
     // Effect logic goes here
 
-    return { updates, userIdsToUpdate };
+    return Promise.resolve({ updates, userIdsToUpdate });
   }
 }
 
 export class BloodEffect2 implements CardEffect {
-  applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+  applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }> {
     console.log(`Applying BloodEffect2 for player ${playerId} with card ${cardId}`);
 
     const updates: any = {};
@@ -22,7 +22,7 @@ export class BloodEffect2 implements CardEffect {
     userIdsToUpdate.push(playerId);
     // Effect logic goes here
 
-    return { updates, userIdsToUpdate };
+    return Promise.resolve({ updates, userIdsToUpdate });
   }
 }
 

@@ -1,7 +1,7 @@
 import { CardEffect } from './CardEffect';
 
 export class TurretEffect implements CardEffect {
-    applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+    async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }> {
         const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, playerId);
         const updates: any = {};
         const userIdsToUpdate: string[] = [];
@@ -23,7 +23,7 @@ export class TurretEffect implements CardEffect {
                 userIdsToUpdate.push(card.playerId);
             }
         });
-        console.log("users in turret",userIdsToUpdate);
+        // console.log("users in turret",userIdsToUpdate);
         return { updates, userIdsToUpdate };
     }
 

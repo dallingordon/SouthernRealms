@@ -7,7 +7,7 @@ interface EffectNode {
 }
 
 export class ClonerEffect implements CardEffect {
-    applyEffect(gameState: any, playerId: string, clonerCardId: string): { updates: any, userIdsToUpdate: string[]  } {
+    applyEffect(gameState: any, playerId: string, clonerCardId: string): Promise<{ updates: any, userIdsToUpdate: string[]  }> {
         const updates: any = {};
         const userIdsToUpdate: string[] = []; // Assuming player has an id property
         userIdsToUpdate.push(playerId);
@@ -31,6 +31,6 @@ export class ClonerEffect implements CardEffect {
             updates[`players/${playerId}/playArea/${card.id}/appliedEffects/${clonerCardId}`] = newEffect;
         });
 
-        return { updates, userIdsToUpdate };
+        return Promise.resolve({ updates, userIdsToUpdate });
     }
 }

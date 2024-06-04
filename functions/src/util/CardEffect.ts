@@ -1,5 +1,6 @@
 export interface CardEffect {
-  applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] };
+  applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }>;
+
 }
 
 export function removeCardEffects(gameState: any, playerId: string, cardId: string): any {
