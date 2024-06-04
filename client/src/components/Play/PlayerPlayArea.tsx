@@ -6,6 +6,7 @@ interface PlayerPlayAreaProps {
     id: string;
     imgUrl?: string;
     deactivated?: boolean; // Add deactivated property
+    cardInputData?: string;
   }>;
   score: number;
 }

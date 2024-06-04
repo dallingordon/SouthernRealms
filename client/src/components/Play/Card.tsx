@@ -5,15 +5,22 @@ interface CardProps {
   card: {
     id: string;
     imgUrl?: string;
-    deactivated?: boolean; // Add deactivated property
+    deactivated?: boolean;
+    type?: string; // Add type property to determine if the card is special
+    cardInputData?: string;
   };
   onClick?: (id: string) => void;
+  isSpecialCardSelected?: boolean; // Add isSpecialCardSelected prop
 }
 
-const Card: React.FC<CardProps> = ({ card, onClick }) => {
+const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected }) => {
   const handleClick = () => {
     if (onClick) {
-      onClick(card.id);
+      if (isSpecialCardSelected && card.type !== 'Special') {
+        onClick(card.id);
+      } else if (!isSpecialCardSelected) {
+        onClick(card.id);
+      }
     }
   };
 
@@ -21,12 +28,13 @@ const Card: React.FC<CardProps> = ({ card, onClick }) => {
     <div
       style={{
         ...styles.card,
-        transform: card.deactivated ? 'rotate(90deg)' : 'none' // Apply rotation if deactivated
+        transform: card.deactivated ? 'rotate(90deg)' : 'none', // Apply rotation if deactivated
+        cursor: isSpecialCardSelected && card.type !== 'Special' ? 'pointer' : 'default' // Only show pointer cursor for clickable cards
       }}
       onClick={handleClick}
     >
       {card.imgUrl ? (
-        <img src={card.imgUrl} alt={`Card ${card.id}`}  style={styles.image}  />
+        <img src={card.imgUrl} alt={`Card ${card.id}`} style={styles.image} />
       ) : (
         <p>{card.id}</p>
       )}

@@ -118,3 +118,10 @@ INSERT INTO cardType (name) VALUES ('Teleporter');
 INSERT INTO cardType (name) VALUES ('Special');
 INSERT INTO cardType (name) VALUES ('Value');
 INSERT INTO cardType (name) VALUES ('Cloner');
+
+INSERT INTO cardInputData (description) VALUES
+('none'),
+('singleCardPlayerHand'),
+('singleCardPlayerPlayArea'),
+('singleCardHalfValue'),
+('SinglePlayerAnyNumberCardsHand');

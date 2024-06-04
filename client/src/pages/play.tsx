@@ -19,6 +19,11 @@ const Play = () => {
   const [playArea, setPlayArea] = useState({ cards: [], score: 0 }); // Updated state
   const [otherPlayers, setOtherPlayers] = useState([]); // Updated state
 
+  // const [selectedCardId, setSelectedCardId] = useState('');
+  const [isSpecialCardSelected, setIsSpecialCardSelected] = useState(false);
+  const [extraData, setExtraData] = useState(null);
+
+
   useEffect(() => {
     if (gameSessionId && playerId) {
       getPlayerData(gameSessionId, playerId)
@@ -50,6 +55,7 @@ const Play = () => {
               id: currentCardId,
               imgUrl: currentCard.filename || 'default-image-url',
               deactivated: currentCard.deactivated,
+              cardInputData: currentCard.cardInputData,
             });
             currentCardId = currentCard.nextCardId;
           }
@@ -70,6 +76,7 @@ const Play = () => {
                 id: currentCardId,
                 imgUrl: currentCard.filename || 'default-image-url',
                 deactivated: currentCard.deactivated,
+                cardInputData: currentCard.cardInputData,
               });
               currentCardId = currentCard.nextCardId;
             }
@@ -147,32 +154,54 @@ const Play = () => {
   };
 
   const handlePlayCard = (e) => {
-    e.preventDefault();
-    if (gameSessionId && playerId && selectedCardId) {
-      const functions = getFunctions();
-      const recordMove = httpsCallable(functions, 'recordMove');
-      console.log(otherPlayers);
-      recordMove({ gameSessionId, playerId, cardId: selectedCardId })
-        .then(() => {
-          setSelectedCardId('');
-          updateCurrentTurnPlayer(gameSessionId, playerId)
-            .then(() => {
-              console.log('Turn updated successfully');
-            })
-            .catch((error) => {
-              console.error('Error updating turn:', error);
-            });
-        })
-        .catch((error) => {
-          console.error('Error recording move:', error);
-          console.log(cardId, gameSessionId, playerId);
-        });
-    }
-  };
+  e.preventDefault();
+  if (gameSessionId && playerId && selectedCardId) {
+    const functions = getFunctions();
+    const recordMove = httpsCallable(functions, 'recordMove');
 
-  const handleCardClick = (cardId) => {
+    recordMove({ gameSessionId, playerId, cardId: selectedCardId, extraData: JSON.stringify(extraData) })
+      .then(() => {
+        setSelectedCardId('');
+        setExtraData(null); // Reset extra data
+        updateCurrentTurnPlayer(gameSessionId, playerId)
+          .then(() => {
+            console.log('Turn updated successfully');
+          })
+          .catch((error) => {
+            console.error('Error updating turn:', error);
+          });
+      })
+      .catch((error) => {
+        console.error('Error recording move:', error);
+        console.log(cardId, gameSessionId, playerId);
+      });
+  }
+};
+
+
+const handleCardClick = (cardId) => {
+  const selectedCard = hand.find(card => card.id === cardId);
+  console.log(selectedCard.cardInputData);
+  if (isSpecialCardSelected) {
+    // If a special card is already selected, this should be the extra card
+    setExtraData({ discardCardId: cardId });
+    setIsSpecialCardSelected(false); // Reset special card selection
+  } else if (selectedCard.type === 'Special') {
+    // If the clicked card is special, prompt for extra card
     setSelectedCardId(cardId);
-  };
+    setIsSpecialCardSelected(true);
+  } else {
+    // Normal card selection
+    setSelectedCardId(cardId);
+  }
+};
+
+const undoSpecialCardSelection = () => {
+  setSelectedCardId('');
+  setIsSpecialCardSelected(false);
+  setExtraData(null);
+};
+
 
   return (
     <PlayLayout>
@@ -182,6 +211,7 @@ const Play = () => {
         {currentTurnPlayerId === playerId ? (
           <>
             <button onClick={handlePlayCard} disabled={!selectedCardId}>Play Card</button>
+            {isSpecialCardSelected && <button onClick={undoSpecialCardSelection}>Undo Special Card Selection</button>}
           </>
         ) : (
           <p>It's {currentTurnPlayerId}'s turn</p>
@@ -189,7 +219,7 @@ const Play = () => {
         {!isGameActive && <button onClick={handleStartGame}>Start Game</button>}
 
         <h2>Hand</h2>
-        <Hand cards={hand} onCardClick={handleCardClick} />
+        <Hand cards={hand} onCardClick={handleCardClick} isSpecialCardSelected={isSpecialCardSelected} />
 
         <h2>Play Area</h2>
         <PlayerPlayArea playArea={playArea.cards} score={playArea.score} />
@@ -199,6 +229,7 @@ const Play = () => {
       </div>
     </PlayLayout>
   );
+
 };
 
 export default Play;

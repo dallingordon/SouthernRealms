@@ -22,3 +22,11 @@ CREATE TABLE cardType (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL
 );
+
+CREATE TABLE cardInputData (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    description TEXT NOT NULL
+);
+
+-- Add the cardInputDataId column to the cards table with a default value of 1
+ALTER TABLE cards ADD COLUMN cardInputDataId INTEGER DEFAULT 1 REFERENCES cardInputData(id);

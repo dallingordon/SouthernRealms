@@ -4,17 +4,24 @@ import Card from './Card';
 interface HandProps {
   cards: Array<{
     id: string;
-    imgUrl?: string; // Add imgUrl property
-    // Add any other properties you expect in the card object
+    imgUrl?: string;
+    type?: string; // Add type property to determine if the card is special
+    cardInputData?: string;
   }>;
-  onCardClick: (id: string) => void; // Add onCardClick prop
+  onCardClick: (id: string) => void;
+  isSpecialCardSelected: boolean; // Add isSpecialCardSelected prop
 }
 
-const Hand: React.FC<HandProps> = ({ cards, onCardClick }) => {
+const Hand: React.FC<HandProps> = ({ cards, onCardClick, isSpecialCardSelected }) => {
   return (
     <div style={styles.hand}>
       {cards.map(card => (
-        <Card key={card.id} card={card} onClick={onCardClick} />
+        <Card
+          key={card.id}
+          card={card}
+          onClick={() => onCardClick(card.id)}
+          isSpecialCardSelected={isSpecialCardSelected} // Pass this to the Card component
+        />
       ))}
     </div>
   );

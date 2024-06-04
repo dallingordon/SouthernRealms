@@ -94,7 +94,7 @@ exports.joinGame = functions.https.onCall((data, context) => {
 
 
 exports.recordMove = functions.https.onCall(async (data, context) => {
-  const { gameSessionId, playerId, cardId } = data;
+  const { gameSessionId, playerId, cardId, extraData } = data;
 
   if (!gameSessionId || !playerId || !cardId) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
@@ -223,7 +223,7 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
     if (specialEffect) {
       // Apply the special effect
-      const { updates: specialUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: specialUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId, extraData);
       updates = { ...updates, ...specialUpdates };
       userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
     } else {
