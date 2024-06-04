@@ -1,0 +1,1 @@
+UPDATE cards SET cardTypeId = 3 WHERE id = 24; -- taxes

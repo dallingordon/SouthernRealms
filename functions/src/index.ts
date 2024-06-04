@@ -2,10 +2,14 @@
 import * as functions from 'firebase-functions';
 //import * as cors from 'cors';
 import * as admin from 'firebase-admin';
+// effects:
 import { ClonerEffect } from './util/ClonerEffect';
 import { TurretEffect } from './util/TurretEffect';
 import { TeleporterEffect} from "./util/TeleporterEffect";
 //const corsHandler = cors({origin: true});
+// special effects:
+const { UCFEffects } = require('./util/UCFEffects');
+const { BLOODEffects } = require('./util/BLOODEffects');
 
 admin.initializeApp();
 
@@ -199,7 +203,34 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   let scoreUpdates: Set<string> = new Set<string>();
 
   if (playedCard) {
-    if (playedCard.name === 'Cloner') {
+  // Check if the card type is 'Special'
+  if (playedCard.type === 'Special') {
+    const playerDeck = player.deckId; // Assuming playerRef has deckId to identify the deck
+    let specialEffect;
+
+    // Determine which deck's effects file to use
+    if (playerDeck === 'UCF') {
+      // Select the appropriate class based on the card name
+      if (UCFEffects[playedCard.name]) {
+        specialEffect = new UCFEffects[playedCard.name]();
+      }
+    } else if (playerDeck === 'Blood') {
+      // Select the appropriate class based on the card name
+      if (BLOODEffects[playedCard.name]) {
+        specialEffect = new BLOODEffects[playedCard.name]();
+      }
+    }
+
+    if (specialEffect) {
+      // Apply the special effect
+      const { updates: specialUpdates, userIdsToUpdate } = specialEffect.applyEffect(gameSession, playerId, cardId);
+      updates = { ...updates, ...specialUpdates };
+      userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
+    } else {
+      // If no special effect is found, add playerId to scoreUpdates
+      scoreUpdates.add(playerId);
+    }
+  } else if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
       const { updates: clonerUpdates, userIdsToUpdate } = clonerEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...clonerUpdates };
