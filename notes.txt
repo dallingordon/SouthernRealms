@@ -5,3 +5,6 @@ got it to add players! not sure it is, no, i know it isn't making the class.  bu
 
 you can't put a null or empty object onto realtime.  you have to push a thing.  that was annoying
 
+UCF Effects:
+    need to decide on immunity.
+    acceptable loss: needs a way to deactivate itself ya heard.

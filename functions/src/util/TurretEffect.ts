@@ -16,6 +16,7 @@ export class TurretEffect implements CardEffect {
         }, cardsSinceLastTurn[0].points);
 
         // Deactivate all cards with the highest value
+        // don't forget to remove effects!!
         cardsSinceLastTurn.forEach((card: any) => {
             if (card.points === highestValue) {
                 updates[`players/${card.playerId}/playArea/${card.id}/deactivated`] = true;
