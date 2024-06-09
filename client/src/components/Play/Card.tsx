@@ -1,6 +1,3 @@
-import React from 'react';
-import { getImageUrl } from '../../util/firebaseClient';
-
 interface CardProps {
   card: {
     id: string;
@@ -11,9 +8,11 @@ interface CardProps {
   };
   onClick?: (id: string) => void;
   isSpecialCardSelected?: boolean; // Add isSpecialCardSelected prop
+  isSelected?: boolean; // Add isSelected prop
+  isExtraSelected?: boolean; // Add isExtraSelected prop
 }
 
-const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected }) => {
+const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected, isSelected, isExtraSelected }) => {
   const handleClick = () => {
     if (onClick) {
       if (isSpecialCardSelected && card.type !== 'Special') {
@@ -29,7 +28,8 @@ const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected }) => 
       style={{
         ...styles.card,
         transform: card.deactivated ? 'rotate(90deg)' : 'none', // Apply rotation if deactivated
-        cursor: isSpecialCardSelected && card.type !== 'Special' ? 'pointer' : 'default' // Only show pointer cursor for clickable cards
+        cursor: isSpecialCardSelected && card.type !== 'Special' ? 'pointer' : 'default', // Only show pointer cursor for clickable cards
+        boxShadow: isSelected ? '0 0 15px red' : isExtraSelected ? '0 0 15px purple' : '0 4px 8px rgba(0, 0, 0, 0.2)' // Apply glowing effect if selected
       }}
       onClick={handleClick}
     >
@@ -53,16 +53,15 @@ const styles = {
     justifyContent: 'center',
     color: 'white',
     fontWeight: 'bold',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     margin: '5px',
     cursor: 'pointer',
-    transition: 'transform 0.3s ease-in-out' // Add transition for smooth rotation
+    transition: 'transform 0.3s ease-in-out', // Add transition for smooth rotation
   } as React.CSSProperties,
   image: {
     width: '100%',
     height: '100%',
     borderRadius: '10px',
-    objectFit: 'cover'
+    objectFit: 'cover',
   } as React.CSSProperties,
 };
 

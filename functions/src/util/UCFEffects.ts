@@ -88,9 +88,46 @@ export class AcceptableLossEffect implements CardEffect {
 }
 
 
+export class NanoEffect implements CardEffect {
+  async applyEffect(gameState: any, playerId: string, cardId: string, extraData: any): Promise<{ updates: any, userIdsToUpdate: string[] }> {
+    console.log(`Applying Nano effect for player ${playerId} with card ${cardId} and extraData ${extraData}`);
+
+    const updates: any = {};
+    const userIdsToUpdate: string[] = [playerId];
+
+    let parsedExtraData: any;
+    try {
+      parsedExtraData = JSON.parse(extraData);
+    } catch (error) {
+      console.error('Error parsing extraData:', error);
+      return { updates, userIdsToUpdate };
+    }
+
+    if (parsedExtraData && parsedExtraData.playAreaCardId) {
+      const playAreaCardId = parsedExtraData.playAreaCardId;
+      if (gameState.players[playerId].playArea[playAreaCardId]) {
+        // Apply immune effect and deactivate
+        updates[`players/${playerId}/playArea/${playAreaCardId}/immune`] = true;
+        updates[`players/${playerId}/playArea/${playAreaCardId}/deactivated`] = false;
+
+        // Stack NanoBot card on top of the selected play area card
+        updates[`players/${playerId}/playArea/${playAreaCardId}/nextCardId`] = cardId;
+        updates[`players/${playerId}/playArea/${cardId}/previousCardId`] = playAreaCardId;
+      } else {
+        console.error(`Card ${playAreaCardId} not found in player ${playerId}'s play area.`);
+      }
+    } else {
+      console.error(`No playAreaCardId found in parsedExtraData.`);
+    }
+
+    return { updates, userIdsToUpdate };
+  }
+}
+
 // Export an object containing all the effect classes
 export const UCFEffects = {
   'Tax': TaxEffect,
   'Acceptable Loss': AcceptableLossEffect,
+  'Nano': NanoEffect,
   // Add more card names and their corresponding classes here
 };

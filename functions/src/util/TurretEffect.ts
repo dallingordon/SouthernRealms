@@ -1,4 +1,4 @@
-import { CardEffect } from './CardEffect';
+import {CardEffect, deactivateCard} from './CardEffect';
 
 export class TurretEffect implements CardEffect {
     async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }> {
@@ -18,9 +18,9 @@ export class TurretEffect implements CardEffect {
         // Deactivate all cards with the highest value
         // don't forget to remove effects!!
         cardsSinceLastTurn.forEach((card: any) => {
-            if (card.points === highestValue) {
-                updates[`players/${card.playerId}/playArea/${card.id}/deactivated`] = true;
-
+            if (card.points === highestValue && card.points != 0) {
+                const deactivateEffects = deactivateCard(gameState, card.playerId, card.id);
+                Object.assign(updates, deactivateEffects);
                 userIdsToUpdate.push(card.playerId);
             }
         });

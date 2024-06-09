@@ -18,11 +18,11 @@ const Play = () => {
   const [selectedCardId, setSelectedCardId] = useState('');
   const [playArea, setPlayArea] = useState({ cards: [], score: 0 }); // Updated state
   const [otherPlayers, setOtherPlayers] = useState([]); // Updated state
-
-  // const [selectedCardId, setSelectedCardId] = useState('');
   const [isSpecialCardSelected, setIsSpecialCardSelected] = useState(false);
-  const [extraData, setExtraData] = useState(null);
+  const [extraCardId, setExtraCardId] = useState('');
 
+  const [isSelectingPlayAreaCard, setIsSelectingPlayAreaCard] = useState(false); // New state
+  const [extraData, setExtraData] = useState(null);
 
   useEffect(() => {
     if (gameSessionId && playerId) {
@@ -154,54 +154,73 @@ const Play = () => {
   };
 
   const handlePlayCard = (e) => {
-  e.preventDefault();
-  if (gameSessionId && playerId && selectedCardId) {
-    const functions = getFunctions();
-    const recordMove = httpsCallable(functions, 'recordMove');
+    e.preventDefault();
+    if (gameSessionId && playerId && selectedCardId) {
+      const functions = getFunctions();
+      const recordMove = httpsCallable(functions, 'recordMove');
 
-    recordMove({ gameSessionId, playerId, cardId: selectedCardId, extraData: JSON.stringify(extraData) })
-      .then(() => {
-        setSelectedCardId('');
-        setExtraData(null); // Reset extra data
-        updateCurrentTurnPlayer(gameSessionId, playerId)
-          .then(() => {
-            console.log('Turn updated successfully');
-          })
-          .catch((error) => {
-            console.error('Error updating turn:', error);
-          });
-      })
-      .catch((error) => {
-        console.error('Error recording move:', error);
-        console.log(cardId, gameSessionId, playerId);
-      });
-  }
-};
+      recordMove({ gameSessionId, playerId, cardId: selectedCardId, extraData: JSON.stringify(extraData) })
+        .then(() => {
+          setSelectedCardId('');
+          setExtraData(null); // Reset extra data
+          updateCurrentTurnPlayer(gameSessionId, playerId)
+            .then(() => {
+              console.log('Turn updated successfully');
+            })
+            .catch((error) => {
+              console.error('Error updating turn:', error);
+            });
+        })
+        .catch((error) => {
+          console.error('Error recording move:', error);
+          console.log(cardId, gameSessionId, playerId);
+        });
+    }
+  };
 
+  const handleCardClick = (cardId) => {
+    const selectedCard = hand.find(card => card.id === cardId);
+    //console.log(selectedCard.cardInputData);
+    if (isSpecialCardSelected) {
+      // If a special card is already selected, this should be the extra card
+      console.log(cardId);
+      setExtraData({ discardCardId: cardId });
+      setExtraCardId(cardId);
+      setIsSpecialCardSelected(false); // Reset special card selection
+    } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerHand') {
+      // If the clicked card is special and requires extra card input from player's hand
+      setSelectedCardId(cardId);
+      setIsSpecialCardSelected(true);
+      setExtraCardId('');
+    } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerPlayArea') {
+      // If the clicked card is special and requires extra card input from player's play area
+      setSelectedCardId(cardId);
+      setIsSelectingPlayAreaCard(true);
+      setExtraCardId('');
+    } else {
+      // Normal card selection
+      setSelectedCardId(cardId);
+    }
+  };
 
-const handleCardClick = (cardId) => {
-  const selectedCard = hand.find(card => card.id === cardId);
-  console.log(selectedCard.cardInputData);
-  if (isSpecialCardSelected) {
-    // If a special card is already selected, this should be the extra card
-    setExtraData({ discardCardId: cardId });
-    setIsSpecialCardSelected(false); // Reset special card selection
-  } else if (selectedCard.type === 'Special') {
-    // If the clicked card is special, prompt for extra card
-    setSelectedCardId(cardId);
-    setIsSpecialCardSelected(true);
-  } else {
-    // Normal card selection
-    setSelectedCardId(cardId);
-  }
-};
+  const handlePlayAreaCardClick = (cardId) => {
+    if (isSelectingPlayAreaCard) {
+      // If a card is being selected for the special card input from the play area
+      setExtraData({ playAreaCardId: cardId });
+      setIsSelectingPlayAreaCard(false); // Reset play area card selection
+      setIsSpecialCardSelected(false); // Reset special card selection
+    } else {
+      // Normal card selection from play area (if needed)
+      setSelectedCardId(cardId);
+    }
+  };
 
-const undoSpecialCardSelection = () => {
-  setSelectedCardId('');
-  setIsSpecialCardSelected(false);
-  setExtraData(null);
-};
-
+  const undoSpecialCardSelection = () => {
+    setSelectedCardId('');
+    setIsSpecialCardSelected(false);
+    setExtraData(null);
+    setIsSelectingPlayAreaCard(false); // Reset play area card selection
+  };
 
   return (
     <PlayLayout>
@@ -219,10 +238,15 @@ const undoSpecialCardSelection = () => {
         {!isGameActive && <button onClick={handleStartGame}>Start Game</button>}
 
         <h2>Hand</h2>
-        <Hand cards={hand} onCardClick={handleCardClick} isSpecialCardSelected={isSpecialCardSelected} />
+        <Hand cards={hand}
+              onCardClick={handleCardClick}
+              isSpecialCardSelected={isSpecialCardSelected}
+              selectedCardId={selectedCardId}
+              extraCardId={extraCardId}
+        />
 
         <h2>Play Area</h2>
-        <PlayerPlayArea playArea={playArea.cards} score={playArea.score} />
+        <PlayerPlayArea playArea={playArea.cards} score={playArea.score} onCardClick={handlePlayAreaCardClick} />
 
         <h2>Other Players</h2>
         <OtherPlayersContainer otherPlayers={otherPlayers} currentTurnPlayerId={currentTurnPlayerId} />

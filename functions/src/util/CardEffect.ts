@@ -20,3 +20,18 @@ export function removeCardEffects(gameState: any, playerId: string, cardId: stri
 
   return updates;
 }
+
+export function deactivateCard(gameState: any, playerId: string, cardId: string): any {
+   const updates: any = {};
+
+  // Deactivate the card
+  updates[`players/${playerId}/playArea/${cardId}/deactivated`] = true;
+
+  // Remove any effects applied by the deactivated card
+  const effectsRemovalUpdates = removeCardEffects(gameState, playerId, cardId);
+
+  // Merge the updates
+  Object.assign(updates, effectsRemovalUpdates);
+
+  return updates;
+}
