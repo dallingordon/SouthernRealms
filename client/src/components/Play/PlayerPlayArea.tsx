@@ -9,15 +9,22 @@ interface PlayerPlayAreaProps {
     cardInputData?: string;
   }>;
   score: number;
+  selectedPlayAreaCardId?: string; // Add selectedPlayAreaCardId prop
+  onCardClick: (id: string) => void; // Add onCardClick prop
 }
 
-const PlayerPlayArea: React.FC<PlayerPlayAreaProps> = ({ playArea, score }) => {
+const PlayerPlayArea: React.FC<PlayerPlayAreaProps> = ({ playArea, score, selectedPlayAreaCardId, onCardClick }) => {
   return (
     <div style={styles.playAreaContainer}>
       <p style={styles.score}>Score: {score}</p>
       <div style={styles.playArea}>
         {playArea.map(card => (
-          <Card key={card.id} card={card} />
+          <Card
+            key={card.id}
+            card={card}
+            onClick={() => onCardClick(card.id)}
+            isPlayAreaSelected={selectedPlayAreaCardId === card.id} // Pass isSelected prop to Card component
+          />
         ))}
       </div>
     </div>

@@ -17,7 +17,7 @@ interface HandProps {
 const Hand: React.FC<HandProps> = ({ cards, onCardClick, isSpecialCardSelected, selectedCardId,extraCardId }) => {
   return (
     <div style={styles.hand}>
-      
+
       {cards.map(card => (
         <Card
           key={card.id}

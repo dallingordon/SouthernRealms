@@ -22,6 +22,8 @@ const Play = () => {
   const [extraCardId, setExtraCardId] = useState('');
 
   const [isSelectingPlayAreaCard, setIsSelectingPlayAreaCard] = useState(false); // New state
+  const [selectedPlayAreaCardId, setSelectedPlayAreaCardId] = useState('');
+
   const [extraData, setExtraData] = useState(null);
 
   useEffect(() => {
@@ -178,40 +180,47 @@ const Play = () => {
     }
   };
 
-  const handleCardClick = (cardId) => {
-    const selectedCard = hand.find(card => card.id === cardId);
-    //console.log(selectedCard.cardInputData);
-    if (isSpecialCardSelected) {
-      // If a special card is already selected, this should be the extra card
-      console.log(cardId);
-      setExtraData({ discardCardId: cardId });
-      setExtraCardId(cardId);
-      setIsSpecialCardSelected(false); // Reset special card selection
-    } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerHand') {
-      // If the clicked card is special and requires extra card input from player's hand
-      setSelectedCardId(cardId);
-      setIsSpecialCardSelected(true);
-      setExtraCardId('');
-    } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerPlayArea') {
-      // If the clicked card is special and requires extra card input from player's play area
-      setSelectedCardId(cardId);
-      setIsSelectingPlayAreaCard(true);
-      setExtraCardId('');
-    } else {
-      // Normal card selection
-      setSelectedCardId(cardId);
-    }
-  };
+ const handleCardClick = (cardId) => {
+  const selectedCard = hand.find(card => card.id === cardId);
+  if (isSpecialCardSelected) {
+    // If a special card is already selected, this should be the extra card
+    setExtraData({ discardCardId: cardId });
+    setExtraCardId(cardId);
+    setIsSpecialCardSelected(false); // Reset special card selection
+  } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerHand') {
+    // If the clicked card is special and requires extra card input from player's hand
+    setSelectedCardId(cardId);
+    setIsSpecialCardSelected(true);
+    setExtraCardId('');
+  } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerPlayArea') {
+    // If the clicked card is special and requires extra card input from player's play area
+    console.log(cardId);
+    setSelectedCardId(cardId);
+    setIsSelectingPlayAreaCard(true);
+    setExtraCardId('');
+    setSelectedPlayAreaCardId(''); // Reset selectedPlayAreaCardId when a new special card is selected
+  } else {
+    // Normal card selection
+    setSelectedCardId(cardId);
+    setExtraCardId('');
+    setSelectedPlayAreaCardId('');
+  }
+};
+
 
   const handlePlayAreaCardClick = (cardId) => {
+    console.log(isSelectingPlayAreaCard);
     if (isSelectingPlayAreaCard) {
       // If a card is being selected for the special card input from the play area
       setExtraData({ playAreaCardId: cardId });
+      setSelectedPlayAreaCardId(cardId);
       setIsSelectingPlayAreaCard(false); // Reset play area card selection
       setIsSpecialCardSelected(false); // Reset special card selection
+
     } else {
       // Normal card selection from play area (if needed)
-      setSelectedCardId(cardId);
+      console.log("this is handlePlayAreaCardClick else being triggered.  idk if that should be happening.");
+      //setSelectedCardId(cardId);
     }
   };
 
@@ -246,7 +255,11 @@ const Play = () => {
         />
 
         <h2>Play Area</h2>
-        <PlayerPlayArea playArea={playArea.cards} score={playArea.score} onCardClick={handlePlayAreaCardClick} />
+        <PlayerPlayArea playArea={playArea.cards}
+                        score={playArea.score}
+                        onCardClick={handlePlayAreaCardClick}
+                        selectedPlayAreaCardId={selectedPlayAreaCardId}
+        />
 
         <h2>Other Players</h2>
         <OtherPlayersContainer otherPlayers={otherPlayers} currentTurnPlayerId={currentTurnPlayerId} />

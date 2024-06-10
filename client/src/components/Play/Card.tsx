@@ -10,9 +10,10 @@ interface CardProps {
   isSpecialCardSelected?: boolean; // Add isSpecialCardSelected prop
   isSelected?: boolean; // Add isSelected prop
   isExtraSelected?: boolean; // Add isExtraSelected prop
+  isPlayAreaSelected?: boolean; // Add isPlayAreaSelected prop
 }
 
-const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected, isSelected, isExtraSelected }) => {
+const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected, isSelected, isExtraSelected, isPlayAreaSelected }) => {
   const handleClick = () => {
     if (onClick) {
       if (isSpecialCardSelected && card.type !== 'Special') {
@@ -29,7 +30,13 @@ const Card: React.FC<CardProps> = ({ card, onClick, isSpecialCardSelected, isSel
         ...styles.card,
         transform: card.deactivated ? 'rotate(90deg)' : 'none', // Apply rotation if deactivated
         cursor: isSpecialCardSelected && card.type !== 'Special' ? 'pointer' : 'default', // Only show pointer cursor for clickable cards
-        boxShadow: isSelected ? '0 0 15px red' : isExtraSelected ? '0 0 15px purple' : '0 4px 8px rgba(0, 0, 0, 0.2)' // Apply glowing effect if selected
+        boxShadow: isSelected
+          ? '0 0 15px red'
+          : isExtraSelected
+          ? '0 0 15px purple'
+          : isPlayAreaSelected
+          ? '0 0 15px green'
+          : '0 4px 8px rgba(0, 0, 0, 0.2)', // Apply glowing effect if selected
       }}
       onClick={handleClick}
     >
