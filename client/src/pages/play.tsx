@@ -58,6 +58,7 @@ const Play = () => {
               imgUrl: currentCard.filename || 'default-image-url',
               deactivated: currentCard.deactivated,
               cardInputData: currentCard.cardInputData,
+              stack: currentCard.stack, // Ensure the stack property is included
             });
             currentCardId = currentCard.nextCardId;
           }
@@ -79,6 +80,7 @@ const Play = () => {
                 imgUrl: currentCard.filename || 'default-image-url',
                 deactivated: currentCard.deactivated,
                 cardInputData: currentCard.cardInputData,
+                stack: currentCard.stack, // Ensure the stack property is included
               });
               currentCardId = currentCard.nextCardId;
             }

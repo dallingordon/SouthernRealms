@@ -8,3 +8,7 @@ you can't put a null or empty object onto realtime.  you have to push a thing.  
 UCF Effects:
     need to decide on immunity.
     acceptable loss: needs a way to deactivate itself ya heard.
+
+
+// need an aftereffects await that happens before score.  teleporter needs it to update the previous next id's and all that
+// acc loss needs it for deactivating the last card

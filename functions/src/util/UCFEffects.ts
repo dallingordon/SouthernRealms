@@ -107,9 +107,9 @@ export class NanoEffect implements CardEffect {
       const playAreaCardId = parsedExtraData.playAreaCardId;
       if (gameState.players[playerId].playArea[playAreaCardId]) {
         // Apply immune effect and deactivate
-        updates[`players/${playerId}/playArea/${cardId}/immune`] = true;
-        updates[`players/${playerId}/playArea/${cardId}/deactivated`] = false;
-
+        updates[`players/${playerId}/playArea/${playAreaCardId}/immune`] = true;
+        updates[`players/${playerId}/playArea/${playAreaCardId}/deactivated`] = false;
+        updates[`players/${playerId}/playArea/${playAreaCardId}/stack`] = cardId;
         // Stack NanoBot card on top of the selected play area card
 
       } else {

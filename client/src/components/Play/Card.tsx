@@ -5,6 +5,7 @@ interface CardProps {
     deactivated?: boolean;
     type?: string; // Add type property to determine if the card is special
     cardInputData?: string;
+    stacked?: string;
   };
   onClick?: (id: string) => void;
   isSpecialCardSelected?: boolean; // Add isSpecialCardSelected prop
