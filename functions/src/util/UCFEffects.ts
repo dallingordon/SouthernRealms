@@ -4,10 +4,11 @@ import { drawCardFunction } from '../index';
 
 
 export class TaxEffect implements CardEffect {
-  async applyEffect(gameState: any, playerId: string, cardId: string ,extraData: any): Promise<{ updates: any, userIdsToUpdate: string[] }> {
+  async applyEffect(gameState: any, playerId: string, cardId: string ,extraData: any): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
     console.log(`Applying Tax effect for player ${playerId} with card ${cardId} and specialdata ${extraData}`);
 
     const updates: any = {};
+    const secondUpdates: any = {};
     const userIdsToUpdate: string[] = [playerId];
 
     let parsedExtraData: any;
@@ -15,7 +16,7 @@ export class TaxEffect implements CardEffect {
       parsedExtraData = JSON.parse(extraData);
     } catch (error) {
       console.error('Error parsing extraData:', error);
-      return { updates, userIdsToUpdate };
+      return { updates, secondUpdates, userIdsToUpdate };
     }
 
     const drawResult = await drawCardFunction({
@@ -46,24 +47,22 @@ export class TaxEffect implements CardEffect {
       console.error(`No discardCardId found in parsedExtraData.`);
     }
 
-    return { updates, userIdsToUpdate };
+    return { updates, secondUpdates, userIdsToUpdate };
   }
 }
 
 export class AcceptableLossEffect implements CardEffect {
-  async applyEffect(gameState: any, playerId: string, cardId: string, extraData: any): Promise<{ updates: any, userIdsToUpdate: string[] }> {
+  async applyEffect(gameState: any, playerId: string, cardId: string, extraData: any): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
     console.log(`Applying Acceptable Loss effect for player ${playerId} with card ${cardId} and extraData ${extraData}`);
 
     const updates: any = {};
-    // const cardupdate: any = {}; // another update? just for this one maybe?
+    const secondUpdates: any = {};
     const userIdsToUpdate: string[] = Object.keys(gameState.players);
 
-    // Deactivate the Acceptable Loss card itself
-   //  cardupdate[`players/${playerId}/playArea/${cardId}/deactivated`] = true;
+    // Deactivate the Acceptable Loss card itself in secondUpdates
+    secondUpdates[`players/${playerId}/playArea/${cardId}/deactivated`] = true;
 
-
-    let effectRemovalUpdates = removeCardEffects(gameState, playerId, cardId);
-
+    let effectRemovalUpdates;
 
     // Iterate through all players
     for (const player of userIdsToUpdate) {
@@ -73,26 +72,39 @@ export class AcceptableLossEffect implements CardEffect {
 
       // Walk through the last 3 or 4 cards
       while (lastPlayedCardId && count < cardsToDeactivate) {
-        updates[`players/${player}/playArea/${lastPlayedCardId}/deactivated`] = true;
-        effectRemovalUpdates = removeCardEffects(gameState, player, lastPlayedCardId);
-        Object.assign(updates, effectRemovalUpdates);
+        const lastPlayedCard = gameState.players[player].playArea[lastPlayedCardId];
+
+        // Skip if the card name is 'Nano'
+        if (lastPlayedCard.name === 'Nano') {
+          lastPlayedCardId = lastPlayedCard.previousCardId;
+          continue;
+        }
+
+        // Deactivate card unless it has immune==true
+        if (!lastPlayedCard.immune) {
+          updates[`players/${player}/playArea/${lastPlayedCardId}/deactivated`] = true;
+          effectRemovalUpdates = removeCardEffects(gameState, player, lastPlayedCardId);
+          Object.assign(updates, effectRemovalUpdates);
+        }
 
         // Move to the previous card
-        lastPlayedCardId = gameState.players[player].playArea[lastPlayedCardId].previousCardId;
+        lastPlayedCardId = lastPlayedCard.previousCardId;
         count++;
       }
     }
 
-    return { updates, userIdsToUpdate };
+    return { updates, secondUpdates, userIdsToUpdate };
   }
 }
 
 
+
 export class NanoEffect implements CardEffect {
-  async applyEffect(gameState: any, playerId: string, cardId: string, extraData: any): Promise<{ updates: any, userIdsToUpdate: string[] }> {
+  async applyEffect(gameState: any, playerId: string, cardId: string, extraData: any): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
     console.log(`Applying Nano effect for player ${playerId} with card ${cardId} and extraData ${extraData}`);
 
     const updates: any = {};
+    const secondUpdates: any = {};
     const userIdsToUpdate: string[] = [playerId];
 
     let parsedExtraData: any;
@@ -100,7 +112,7 @@ export class NanoEffect implements CardEffect {
       parsedExtraData = JSON.parse(extraData);
     } catch (error) {
       console.error('Error parsing extraData:', error);
-      return { updates, userIdsToUpdate };
+      return { updates, secondUpdates, userIdsToUpdate };
     }
 
     if (parsedExtraData && parsedExtraData.playAreaCardId) {
@@ -119,7 +131,7 @@ export class NanoEffect implements CardEffect {
       console.error(`No playAreaCardId found in parsedExtraData.`);
     }
 
-    return { updates, userIdsToUpdate };
+    return { updates, secondUpdates, userIdsToUpdate };
   }
 }
 

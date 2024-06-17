@@ -196,7 +196,7 @@ const Play = () => {
     setExtraCardId('');
   } else if (selectedCard.type === 'Special' && selectedCard.cardInputData === 'singleCardPlayerPlayArea') {
     // If the clicked card is special and requires extra card input from player's play area
-    console.log(cardId);
+    // console.log(cardId);
     setSelectedCardId(cardId);
     setIsSelectingPlayAreaCard(true);
     setExtraCardId('');
@@ -211,7 +211,7 @@ const Play = () => {
 
 
   const handlePlayAreaCardClick = (cardId) => {
-    console.log(isSelectingPlayAreaCard);
+    // console.log(isSelectingPlayAreaCard);
     if (isSelectingPlayAreaCard) {
       // If a card is being selected for the special card input from the play area
       setExtraData({ playAreaCardId: cardId });

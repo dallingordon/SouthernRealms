@@ -114,7 +114,8 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   const player = playerSnapshot.val();
 
   let updates: any = {};
-  const previousMoveId = gameSession.latestMoveId; // Add this line
+  let secondUpdates: any = {};
+  const previousMoveId = gameSession.latestMoveId;
 
   const newMoveData: any = {
     playerId,
@@ -124,7 +125,7 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   };
 
   if (previousMoveId) {
-    newMoveData.previousMoveId = previousMoveId; // Add previousMoveId only if it exists
+    newMoveData.previousMoveId = previousMoveId;
   }
 
   updates[`moves/${newMoveId}`] = newMoveData;
@@ -163,7 +164,7 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     updates[`players/${playerId}/firstPlayedCardId`] = cardId;
   }
 
-  if (player.lastPlayedCardId && player.hand[cardId].name != "Teleporter") { //added this since teleporter pulls this card up
+  if (player.lastPlayedCardId && player.hand[cardId].name !== "Teleporter") {
     updates[`players/${playerId}/playArea/${player.lastPlayedCardId}/nextCardId`] = cardId;
   }
 
@@ -172,78 +173,73 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   function calculateScore(gameSession: any, playerId: string): number {
     const player = gameSession.players[playerId];
     let totalScore = 0;
-    console.log("calculating score playerid",playerId);
     Object.values(player.playArea as Record<string, any>).forEach((card: any) => {
       let currentPoints = card.points;
 
       if (card.deactivated) {
-          currentPoints = 0;
+        currentPoints = 0;
       } else if (card.appliedEffects) {
-            const effects = Object.values(card.appliedEffects);
-            effects.forEach((effect: any) => {
-                if (effect.action === "multiply") {
-                    currentPoints *= effect.value;
-                } else if (effect.action === "add") {
-                    currentPoints += effect.value;
-                } else if (effect.action === "subtract") {
-                    currentPoints -= effect.value;
-                }
-            });
-        }
+        const effects = Object.values(card.appliedEffects);
+        effects.forEach((effect: any) => {
+          if (effect.action === "multiply") {
+            currentPoints *= effect.value;
+          } else if (effect.action === "add") {
+            currentPoints += effect.value;
+          } else if (effect.action === "subtract") {
+            currentPoints -= effect.value;
+          }
+        });
+      }
 
-        totalScore += currentPoints;
+      totalScore += currentPoints;
     });
 
     return totalScore;
   }
 
-
   // Apply card effects and update scores
-
   let scoreUpdates: Set<string> = new Set<string>();
 
   if (playedCard) {
-  // Check if the card type is 'Special'
-  if (playedCard.type === 'Special') {
-    const playerDeck = player.deckId; // Assuming playerRef has deckId to identify the deck
-    let specialEffect;
+    if (playedCard.type === 'Special') {
+      const playerDeck = player.deckId;
+      let specialEffect;
 
-    // Determine which deck's effects file to use
-    if (playerDeck === 'UCF') {
-      // Select the appropriate class based on the card name
-      if (UCFEffects[playedCard.name]) {
-        specialEffect = new UCFEffects[playedCard.name]();
+      if (playerDeck === 'UCF') {
+        if (UCFEffects[playedCard.name]) {
+          specialEffect = new UCFEffects[playedCard.name]();
+        }
+      } else if (playerDeck === 'Blood') {
+        if (BLOODEffects[playedCard.name]) {
+          specialEffect = new BLOODEffects[playedCard.name]();
+        }
       }
-    } else if (playerDeck === 'Blood') {
-      // Select the appropriate class based on the card name
-      if (BLOODEffects[playedCard.name]) {
-        specialEffect = new BLOODEffects[playedCard.name]();
-      }
-    }
 
-    if (specialEffect) {
-      // Apply the special effect
-      const { updates: specialUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId, extraData);
-      updates = { ...updates, ...specialUpdates };
-      userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
-    } else {
-      // If no special effect is found, add playerId to scoreUpdates
-      scoreUpdates.add(playerId);
-    }
-  } else if (playedCard.name === 'Cloner') {
+      if (specialEffect) {
+        const { updates: specialUpdates, secondUpdates: specialSecondUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId, extraData);
+        updates = { ...updates, ...specialUpdates };
+        secondUpdates = { ...secondUpdates, ...specialSecondUpdates };
+        userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
+      } else {
+        scoreUpdates.add(playerId);
+      }
+    } else if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
-      const { updates: clonerUpdates, userIdsToUpdate } = await clonerEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: clonerUpdates, secondUpdates: clonerSecondUpdates, userIdsToUpdate } = await clonerEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...clonerUpdates };
+      secondUpdates = { ...secondUpdates, ...clonerSecondUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else if (playedCard.name === 'Turret') {
       const turretEffect = new TurretEffect();
-      const { updates: turretUpdates, userIdsToUpdate } = await turretEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: turretUpdates, secondUpdates: turretSecondUpdates, userIdsToUpdate } = await turretEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...turretUpdates };
+      secondUpdates = { ...secondUpdates, ...turretSecondUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else if (playedCard.name === 'Teleporter') {
       const teleporterEffect = new TeleporterEffect();
-      const { updates: teleporterUpdates, userIdsToUpdate } = await teleporterEffect.applyEffect(gameSession, playerId, cardId);
+      const { updates: teleporterUpdates, secondUpdates: teleporterSecondUpdates, userIdsToUpdate } = await teleporterEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...teleporterUpdates };
+      secondUpdates = { ...secondUpdates, ...teleporterSecondUpdates };
       userIdsToUpdate.forEach(userId => scoreUpdates.add(userId));
     } else {
       scoreUpdates.add(playerId);
@@ -252,6 +248,10 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
 
   // Update the game session with the gathered updates
   await gameSessionRef.update(updates);
+
+  await gameSessionRef.once('value');
+
+  await gameSessionRef.update(secondUpdates);
 
   // Refresh the game session state after updates
   const updatedGameSessionSnapshot = await gameSessionRef.once('value');
@@ -270,10 +270,8 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   await gameSessionRef.update(updates);
 
   return { success: true };
-
-
-
 });
+
 
 
 

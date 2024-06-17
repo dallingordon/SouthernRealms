@@ -1,13 +1,14 @@
 import {CardEffect, deactivateCard} from './CardEffect';
 
 export class TurretEffect implements CardEffect {
-    async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, userIdsToUpdate: string[] }> {
+    async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
         const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, playerId);
         const updates: any = {};
+        const secondUpdates: any = {};
         const userIdsToUpdate: string[] = [];
         //console.log("cards since",cardsSinceLastTurn);
         if (cardsSinceLastTurn.length === 0) {
-            return { updates, userIdsToUpdate };
+            return { updates, secondUpdates, userIdsToUpdate };
         }
 
         // Find the highest value card(s)
@@ -25,7 +26,7 @@ export class TurretEffect implements CardEffect {
             }
         });
         // console.log("users in turret",userIdsToUpdate);
-        return { updates, userIdsToUpdate };
+        return { updates, secondUpdates, userIdsToUpdate };
     }
 
 

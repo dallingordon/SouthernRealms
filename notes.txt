@@ -12,3 +12,7 @@ UCF Effects:
 
 // need an aftereffects await that happens before score.  teleporter needs it to update the previous next id's and all that
 // acc loss needs it for deactivating the last card
+
+okay, TELEPORTER goofed up the previous ojb stuff.  it is time for the other update phase.
+
+yeah, it is time for the post card update.  secondary update before score is calculated.  do clean up stuff

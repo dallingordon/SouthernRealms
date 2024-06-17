@@ -22,27 +22,28 @@ const preprocessPlayArea = (playArea: PlayerPlayAreaProps['playArea']) => {
   // First pass: collect all cards that are referenced by the stack property
   playArea.forEach(card => {
     if (card.stack) {
-      referencedCards[card.id] = card.stack;
+      referencedCards[card.stack] = card.id;
     }
   });
 
-  // Second pass: distribute cards into baseCards and stackedCardsMap
   playArea.forEach(card => {
-    if (!Object.values(referencedCards).includes(card.id)) {
-      console.log()
+    if (!Object.keys(referencedCards).includes(card.id)) {
+      // console.log()
       baseCards.push(card);
     }
-
-    // If the card has a stack property, add it to the stack of the referenced card
-    if (card.stack) {
-      if (!stackedCardsMap[card.stack]) {
-        stackedCardsMap[card.stack] = [];
+    else
+    {
+      const ref_id = referencedCards[card.id]
+      if (!stackedCardsMap[ref_id]) {
+        stackedCardsMap[ref_id] = [];
       }
-      // Add the current card to the stack of the card it references
-      stackedCardsMap[card.stack].push(card);
+      stackedCardsMap[ref_id].push(card);
     }
   });
 
+
+
+  console.log("ref: ",referencedCards);
   console.log('Base Cards:', baseCards);
   console.log('Stacked Cards Map:', stackedCardsMap);
 

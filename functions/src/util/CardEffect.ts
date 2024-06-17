@@ -1,5 +1,5 @@
 export interface CardEffect {
-  applyEffect(gameState: any, playerId: string, cardId: string, extraData?: any): Promise<{ updates: any, userIdsToUpdate: string[] }>;
+  applyEffect(gameState: any, playerId: string, cardId: string, extraData?: any): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }>;
 
 }
 
