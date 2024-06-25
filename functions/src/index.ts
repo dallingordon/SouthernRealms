@@ -10,6 +10,8 @@ import { TeleporterEffect} from "./util/TeleporterEffect";
 // special effects:
 const { UCFEffects } = require('./util/UCFEffects');
 const { BLOODEffects } = require('./util/BLOODEffects');
+const { MSRVEffects } = require('./util/MSRVEffects');
+
 
 admin.initializeApp();
 
@@ -205,7 +207,11 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
       const playerDeck = player.deckId;
       let specialEffect;
 
-      if (playerDeck === 'UCF') {
+      if (playerDeck === 'MSRV') {
+        if (MSRVEffects[playedCard.name]) {
+          specialEffect = new MSRVEffects[playedCard.name]();
+        }
+      } else if (playerDeck === 'UCF') {
         if (UCFEffects[playedCard.name]) {
           specialEffect = new UCFEffects[playedCard.name]();
         }

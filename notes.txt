@@ -16,3 +16,9 @@ UCF Effects:
 okay, TELEPORTER goofed up the previous ojb stuff.  it is time for the other update phase.
 
 yeah, it is time for the post card update.  secondary update before score is calculated.  do clean up stuff
+
+// teleporter works correctly with nanobots because it thinks its a card.   not sure if thats bad.  it might be fine lol
+
+//for venice, what if you had a card that let you could play anywhere (any order) on the field, and you could play cards of 2 or less on it.  you could
+play a healer boy on it?
+
