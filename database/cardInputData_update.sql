@@ -1,0 +1,1 @@
+UPDATE cards SET cardInputDataId = 2 WHERE id = 24; -- taxes, singleCardPlayerHand

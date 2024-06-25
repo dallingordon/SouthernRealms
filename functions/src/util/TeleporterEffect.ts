@@ -1,8 +1,9 @@
 import { CardEffect, removeCardEffects } from './CardEffect';
 
 export class TeleporterEffect implements CardEffect {
-  applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+  applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
     let updates: any = {};
+    let secondUpdates: any = {};
     const userIdsToUpdate: string[] = [];
 
     const player = gameState.players[playerId];
@@ -19,7 +20,7 @@ export class TeleporterEffect implements CardEffect {
     // Remove all effects and deactivated status
     delete lastCard.appliedEffects;
     delete lastCard.deactivated;
-    console.log(lastCard)
+
     // Move the card back to the player's hand
     // player.hand[lastCardId] = lastCard;
 
@@ -27,6 +28,7 @@ export class TeleporterEffect implements CardEffect {
     // Update links in the playArea
     if (lastCard.previousCardId) {
       updates[`players/${playerId}/playArea/${lastCard.previousCardId}/nextCardId`] = cardId;
+      secondUpdates[`players/${playerId}/playArea/${cardId}/previousCardId`] = lastCard.previousCardId;
     }
     if (lastCardId === player.firstPlayedCardId) {
       updates[`players/${playerId}/firstPlayedCardId`] = cardId;
@@ -47,6 +49,6 @@ export class TeleporterEffect implements CardEffect {
 
     userIdsToUpdate.push(playerId);
 
-    return { updates, userIdsToUpdate };
+    return Promise.resolve({ updates, secondUpdates, userIdsToUpdate });
   }
 }

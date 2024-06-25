@@ -112,4 +112,16 @@ INSERT INTO decksetup (cardid, quantity, deckid) VALUES (48, 1, 2);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (49, 2, 3);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (50, 2, 1);
 
+-- for cardTypes
+INSERT INTO cardType (name) VALUES ('Turret');
+INSERT INTO cardType (name) VALUES ('Teleporter');
+INSERT INTO cardType (name) VALUES ('Special');
+INSERT INTO cardType (name) VALUES ('Value');
+INSERT INTO cardType (name) VALUES ('Cloner');
 
+INSERT INTO cardInputData (description) VALUES
+('none'),
+('singleCardPlayerHand'),
+('singleCardPlayerPlayArea'),
+('singleCardHalfValue'),
+('SinglePlayerAnyNumberCardsHand');

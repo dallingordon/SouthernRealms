@@ -5,6 +5,7 @@ interface OtherPlayerPlayAreaProps {
     id: string;
     imgUrl?: string;
     deactivated?: boolean;
+    cardInputData?: string;
   }>;
   score: number;
 }

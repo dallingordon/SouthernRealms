@@ -1,13 +1,14 @@
-import { CardEffect } from './CardEffect';
+import {CardEffect, deactivateCard} from './CardEffect';
 
 export class TurretEffect implements CardEffect {
-    applyEffect(gameState: any, playerId: string, cardId: string): { updates: any, userIdsToUpdate: string[] } {
+    async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
         const cardsSinceLastTurn = this.getCardsSinceLastTurn(gameState, playerId);
         const updates: any = {};
+        const secondUpdates: any = {};
         const userIdsToUpdate: string[] = [];
         //console.log("cards since",cardsSinceLastTurn);
         if (cardsSinceLastTurn.length === 0) {
-            return { updates, userIdsToUpdate };
+            return { updates, secondUpdates, userIdsToUpdate };
         }
 
         // Find the highest value card(s)
@@ -16,15 +17,16 @@ export class TurretEffect implements CardEffect {
         }, cardsSinceLastTurn[0].points);
 
         // Deactivate all cards with the highest value
+        // don't forget to remove effects!!
         cardsSinceLastTurn.forEach((card: any) => {
-            if (card.points === highestValue) {
-                updates[`players/${card.playerId}/playArea/${card.id}/deactivated`] = true;
-
+            if (card.points === highestValue && card.points != 0) {
+                const deactivateEffects = deactivateCard(gameState, card.playerId, card.id);
+                Object.assign(updates, deactivateEffects);
                 userIdsToUpdate.push(card.playerId);
             }
         });
-        console.log("users in turret",userIdsToUpdate);
-        return { updates, userIdsToUpdate };
+        // console.log("users in turret",userIdsToUpdate);
+        return { updates, secondUpdates, userIdsToUpdate };
     }
 
 
