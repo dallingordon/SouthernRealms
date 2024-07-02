@@ -199,37 +199,44 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     return totalScore;
   }
 
+  function getSpecialEffect(effectName: string, deckId: string) {
+    let specialEffect;
+
+    if (deckId === 'MSRV') {
+      if (MSRVEffects[effectName]) {
+        specialEffect = new MSRVEffects[effectName]();
+      }
+    } else if (deckId === 'UCF') {
+      if (UCFEffects[effectName]) {
+        specialEffect = new UCFEffects[effectName]();
+      }
+    } else if (deckId === 'Blood') {
+      if (BLOODEffects[effectName]) {
+        specialEffect = new BLOODEffects[effectName]();
+      }
+    }
+
+    return specialEffect;
+  }
+
+
   // Apply card effects and update scores
   let scoreUpdates: Set<string> = new Set<string>();
 
-  if (playedCard) {
-    if (playedCard.type === 'Special') {
-      const playerDeck = player.deckId;
-      let specialEffect;
+if (playedCard) {
+  if (playedCard.type === 'Special') {
+    const playerDeck = player.deckId;
+    const specialEffect = getSpecialEffect(playedCard.name, playerDeck);
 
-      if (playerDeck === 'MSRV') {
-        if (MSRVEffects[playedCard.name]) {
-          specialEffect = new MSRVEffects[playedCard.name]();
-        }
-      } else if (playerDeck === 'UCF') {
-        if (UCFEffects[playedCard.name]) {
-          specialEffect = new UCFEffects[playedCard.name]();
-        }
-      } else if (playerDeck === 'Blood') {
-        if (BLOODEffects[playedCard.name]) {
-          specialEffect = new BLOODEffects[playedCard.name]();
-        }
-      }
-
-      if (specialEffect) {
-        const { updates: specialUpdates, secondUpdates: specialSecondUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId, extraData);
-        updates = { ...updates, ...specialUpdates };
-        secondUpdates = { ...secondUpdates, ...specialSecondUpdates };
-        userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
-      } else {
-        scoreUpdates.add(playerId);
-      }
-    } else if (playedCard.name === 'Cloner') {
+    if (specialEffect) {
+      const { updates: specialUpdates, secondUpdates: specialSecondUpdates, userIdsToUpdate } = await specialEffect.applyEffect(gameSession, playerId, cardId, extraData);
+      updates = { ...updates, ...specialUpdates };
+      secondUpdates = { ...secondUpdates, ...specialSecondUpdates };
+      userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
+    } else {
+      scoreUpdates.add(playerId);
+    }
+  } else if (playedCard.name === 'Cloner') {
       const clonerEffect = new ClonerEffect();
       const { updates: clonerUpdates, secondUpdates: clonerSecondUpdates, userIdsToUpdate } = await clonerEffect.applyEffect(gameSession, playerId, cardId);
       updates = { ...updates, ...clonerUpdates };
@@ -258,6 +265,29 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
   await gameSessionRef.once('value');
 
   await gameSessionRef.update(secondUpdates);
+
+  //Persistent Effects handled here
+  if (gameSession.persistEffects) {
+  const persistUpdates: any = {};
+
+  for (const effect of gameSession.persistEffects) {
+    const { playerId, deckId, persistFunction } = effect; // persist function have to write this stuff to the game state
+    const persistEffect = getSpecialEffect(persistFunction, deckId);
+
+    if (persistEffect) {
+      const effectUpdates = await persistEffect.applyEffect(gameSession, playerId, cardId, extraData);
+
+      // userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
+
+      Object.assign(persistUpdates, effectUpdates);
+    }
+  }
+
+  await gameSessionRef.update(persistUpdates);
+}
+
+
+
 
   // Refresh the game session state after updates
   const updatedGameSessionSnapshot = await gameSessionRef.once('value');
