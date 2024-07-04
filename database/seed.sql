@@ -81,7 +81,7 @@ INSERT INTO decksetup (cardid, quantity, deckid) VALUES (10, 3, 1); --blood
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (11, 2, 4);  --ucf
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (13, 2, 1);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (14, 2, 7); --nov
-INSERT INTO decksetup (cardid, quantity, deckid) VALUES (16, 1, 6);
+INSERT INTO decksetup (cardid, quantity, deckid) VALUES (16, 8, 6);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (17, 1, 7);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (20, 1, 7);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (21, 3, 6);
@@ -104,7 +104,7 @@ INSERT INTO decksetup (cardid, quantity, deckid) VALUES (40, 1, 8);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (41, 1, 5);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (42, 1, 3);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (43, 1, 8);
-INSERT INTO decksetup (cardid, quantity, deckid) VALUES (44, 2, 8);
+INSERT INTO decksetup (cardid, quantity, deckid) VALUES (44, 2, 1);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (45, 3, 3);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (46, 2, 6);
 INSERT INTO decksetup (cardid, quantity, deckid) VALUES (47, 2, 7);

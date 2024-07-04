@@ -1,4 +1,4 @@
-import { CardEffect, deactivateCard } from './CardEffect';
+import { CardEffect, deactivateCard, removeCardEffects } from './CardEffect';
 
 export class GunBoyEffect implements CardEffect {
   async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
@@ -63,9 +63,65 @@ export class MedEffect implements CardEffect {
   }
 }
 
+export class BoomEffect implements CardEffect {
+  async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
+    const updates: any = {};
+    const secondUpdates: any = {};
+    const userIdsToUpdate: string[] = [playerId];
+
+    // Add the Boom card to the persistEffects
+    if (!gameState.persistEffects) {
+      gameState.persistEffects = [];
+    }
+
+    gameState.persistEffects.push({
+      playerId,
+      deckId: gameState.players[playerId].deckId,
+      cardId: cardId,
+      persistFunction: 'BoomPersist'
+    });
+
+    updates[`persistEffects`] = gameState.persistEffects;
+
+    return { updates, secondUpdates, userIdsToUpdate };
+  }
+}
+
+export class BoomPersistEffect {
+  async applyEffect(gameState: any, persistPlayerId: string, persistDeckId: string, persistCardId: string, playerId: string, cardId: string, key: string): Promise<any> {
+    const updates: any = {};
+
+    // Check if playerId and persistPlayerId are the same
+    if (persistPlayerId === playerId) {
+      // Check if persistCardId and cardId are the same
+      if (persistCardId !== cardId) {
+        // Remove the persistEffect from persistEffects on the game using the key
+        delete gameState.persistEffects[key];
+        updates[`persistEffects/${key}`] = null;
+      }
+    } else {
+      // Check if the card is not immune before deactivating
+      const lastPlayedCard = gameState.players[playerId].playArea[cardId];
+
+      if (lastPlayedCard && !lastPlayedCard.immune) {
+        updates[`players/${playerId}/playArea/${cardId}/deactivated`] = true;
+        const effectRemovalUpdates = removeCardEffects(gameState, playerId, cardId);
+        Object.assign(updates, effectRemovalUpdates);
+      }
+    }
+
+    return updates;
+  }
+}
+
 // Export an object containing all the effect classes
 export const MSRVEffects = {
   'Gun Boi': GunBoyEffect,
   'Med': MedEffect,
+  'Boom': BoomEffect,
+  'BoomPersist': BoomPersistEffect,
+
+  //persistEffects:
+
   // Add more card names and their corresponding classes here
 };

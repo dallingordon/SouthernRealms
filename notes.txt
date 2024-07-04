@@ -22,3 +22,37 @@ yeah, it is time for the post card update.  secondary update before score is cal
 //for venice, what if you had a card that let you could play anywhere (any order) on the field, and you could play cards of 2 or less on it.  you could
 play a healer boy on it?
 
+//44 is sacr 2 it is in goldboys put in bloody
+
+new shit.
+blood boys requires stacking on stacking.  also requires 1 from hand (with restriction) and 1 from play area (decide which goes first, maybe highlight
+which can be tripled, idk)
+sang generator has a restriction too.
+sacr can pay for it.  difficult to set up.
+
+make stacking work in other play areas.
+
+msrv future effects: boom.  disable next card played by each player.  voc will have to do this.  the card needs to go into, something, have a way to
+select cards, and apply their effects.  voc can do it and it stays in it, no real removal criteria.  boom will have removal criteria.
+i like that.  residualEffects on the game object.  in resolve there is something that loops through it and sees what it needs to do, work as effect.
+boom would say are you not immune, okay deactivate.  then, in second action it could remove itself? or something?
+
+novo, selecting players.  works for the negative boy (play it there) and select who to return their hand (can select yourself).
+teleporter boys have a residual effect, whenever turrets are played their player counts those and gets that bonus.
+
+could you do persitingEffects to get the right functionality with the saints (mskv0w), in the second update it removes any applied effects? that c
+ould be right.
+
+takes care of rams too.  run the same function in persist as when you play.
+
+last for 3 turns works.  remove at end of 3 turns. whitch hunter, select a players card to deactivate. part of persist is to let them select a players card?
+voc persistence works.  add an applied effect? to the incoming card unless immune?
+
+chatgpt has ideas for persistingEffects.
+
+i think the second update removes itself? when it is time?
+
+nano bots don't work with turn order.  if you play it on something the real last thing is not available to turrets, it thinks nano bots is in the spot.
+
+boom persist.  it is running each time, yay, just gotta fix the rules.  return userids if necessary, and also we need to get the playing player vs the
+persisting card player.
