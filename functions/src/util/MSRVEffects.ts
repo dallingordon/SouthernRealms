@@ -1,4 +1,4 @@
-import { CardEffect, deactivateCard } from './CardEffect';
+import { CardEffect, deactivateCard, removeCardEffects } from './CardEffect';
 
 export class GunBoyEffect implements CardEffect {
   async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
@@ -77,7 +77,7 @@ export class BoomEffect implements CardEffect {
     gameState.persistEffects.push({
       playerId,
       deckId: gameState.players[playerId].deckId,
-      cardName: 'Boom',
+      cardId: cardId,
       persistFunction: 'BoomPersist'
     });
 
@@ -87,20 +87,26 @@ export class BoomEffect implements CardEffect {
   }
 }
 
-export class BoomPersistEffect implements CardEffect {
-  async applyEffect(gameState: any, playerId: string, cardId: string): Promise<any> {
+export class BoomPersistEffect {
+  async applyEffect(gameState: any, persistPlayerId: string, persistDeckId: string, persistCardId: string, playerId: string, cardId: string, key: string): Promise<any> {
     const updates: any = {};
-    const currentTurnPlayerId = gameState.currentTurnPlayerId;
-  // start here.  good work.
-    for (const player in gameState.players) {
-      if (player !== playerId && player !== currentTurnPlayerId) {
-        const playArea = gameState.players[player].playArea;
-        for (const cardId in playArea) {
-          const card = playArea[cardId];
-          if (!card.deactivated) {
-            updates[`players/${player}/playArea/${cardId}/deactivated`] = true;
-          }
-        }
+
+    // Check if playerId and persistPlayerId are the same
+    if (persistPlayerId === playerId) {
+      // Check if persistCardId and cardId are the same
+      if (persistCardId !== cardId) {
+        // Remove the persistEffect from persistEffects on the game using the key
+        delete gameState.persistEffects[key];
+        updates[`persistEffects/${key}`] = null;
+      }
+    } else {
+      // Check if the card is not immune before deactivating
+      const lastPlayedCard = gameState.players[playerId].playArea[cardId];
+
+      if (lastPlayedCard && !lastPlayedCard.immune) {
+        updates[`players/${playerId}/playArea/${cardId}/deactivated`] = true;
+        const effectRemovalUpdates = removeCardEffects(gameState, playerId, cardId);
+        Object.assign(updates, effectRemovalUpdates);
       }
     }
 

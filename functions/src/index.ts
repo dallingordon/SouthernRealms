@@ -102,15 +102,15 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
   }
 
-  const gameSessionRef = admin.database().ref(`app/games/${gameSessionId}`);
+  let gameSessionRef = admin.database().ref(`app/games/${gameSessionId}`);
   const movesRef = admin.database().ref(`app/games/${gameSessionId}/moves`);
   const playersRef = admin.database().ref(`app/games/${gameSessionId}/players/${playerId}`);
   const newMoveRef = movesRef.push();
 
   const newMoveId = newMoveRef.key;
 
-  const gameSessionSnapshot = await gameSessionRef.once('value');
-  const gameSession = gameSessionSnapshot.val();
+  let gameSessionSnapshot = await gameSessionRef.once('value');
+  let gameSession = gameSessionSnapshot.val();
 
   const playerSnapshot = await playersRef.once('value');
   const player = playerSnapshot.val();
@@ -259,25 +259,32 @@ if (playedCard) {
     }
   }
 
-  // Update the game session with the gathered updates
   await gameSessionRef.update(updates);
+  gameSessionSnapshot = await gameSessionRef.once('value');
+  gameSession = gameSessionSnapshot.val();
 
-  await gameSessionRef.once('value');
-
-  await gameSessionRef.update(secondUpdates);
+  if (secondUpdates) {
+    await gameSessionRef.update(secondUpdates);
+    gameSessionSnapshot = await gameSessionRef.once('value');
+    gameSession = gameSessionSnapshot.val();
+  }
 
   //Persistent Effects handled here
   if (gameSession.persistEffects) {
   const persistUpdates: any = {};
 
-  for (const effect of gameSession.persistEffects) {
-    const { playerId, deckId, persistFunction } = effect; // persist function have to write this stuff to the game state
-    const persistEffect = getSpecialEffect(persistFunction, deckId);
+const keys = Object.keys(gameSession.persistEffects);
+
+for (const key of keys) {
+    const effect = gameSession.persistEffects[key];
+    const { playerId: persistPlayerId, deckId: persistDeckId, cardId: persistCardId, persistFunction } = effect;
+    const persistEffect = getSpecialEffect(persistFunction, persistDeckId);
 
     if (persistEffect) {
-      const effectUpdates = await persistEffect.applyEffect(gameSession, playerId, cardId, extraData);
-
-      // userIdsToUpdate.forEach((userId: string) => scoreUpdates.add(userId));
+      const effectUpdates = await persistEffect.applyEffect(gameSession, persistPlayerId, persistDeckId, persistCardId, playerId, cardId, key);
+      // persist player and deck are from the card in the persist queue.
+      // playerid and cardid are what were just played.  access them by that easier.
+      //remember, persist functre ARE RAN the first time they are in the queue.
 
       Object.assign(persistUpdates, effectUpdates);
     }
