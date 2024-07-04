@@ -11,7 +11,7 @@ import { TeleporterEffect} from "./util/TeleporterEffect";
 const { UCFEffects } = require('./util/UCFEffects');
 const { BLOODEffects } = require('./util/BLOODEffects');
 const { MSRVEffects } = require('./util/MSRVEffects');
-
+const { MOSKOVOWEffects } = require('./util/MoskovowEffects' );
 
 admin.initializeApp();
 
@@ -209,6 +209,10 @@ exports.recordMove = functions.https.onCall(async (data, context) => {
     } else if (deckId === 'UCF') {
       if (UCFEffects[effectName]) {
         specialEffect = new UCFEffects[effectName]();
+      }
+    } else if (deckId === 'Moskovow') {
+      if ( MOSKOVOWEffects[effectName]) {
+        specialEffect = new MOSKOVOWEffects[effectName]();
       }
     } else if (deckId === 'Blood') {
       if (BLOODEffects[effectName]) {

@@ -8,3 +8,6 @@ UPDATE cards SET cardInputDataId = 3 WHERE id = 11;
 UPDATE cards SET cardTypeId = 3 where id = 46; -- msrv gunboi
 UPDATE cards SET cardTypeId = 3 where id = 8; -- msrv med
 UPDATE cards SET cardTypeId = 3 where id = 16; -- msrv boom
+
+UPDATE cards SET cardTypeId = 3 where id = 38; -- mskovow saints
+UPDATE cards SET cardTypeId = 3 where id = 41;
