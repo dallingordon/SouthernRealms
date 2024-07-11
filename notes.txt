@@ -56,3 +56,8 @@ nano bots don't work with turn order.  if you play it on something the real last
 
 boom persist.  it is running each time, yay, just gotta fix the rules.  return userids if necessary, and also we need to get the playing player vs the
 persisting card player.
+
+saint works!!
+
+next???
+voc effect

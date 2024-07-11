@@ -1,4 +1,4 @@
-import { CardEffect, removeCardEffects } from './CardEffect';
+import { CardEffect } from './CardEffect';
 
 export class SaintEffect implements CardEffect {
   async applyEffect(gameState: any, playerId: string, cardId: string): Promise<{ updates: any, secondUpdates: any, userIdsToUpdate: string[] }> {
@@ -31,12 +31,9 @@ export class SaintPersistEffect {
       const saintCardPath = `players/${persistPlayerId}/playArea/${persistCardId}`;
       updates[`${saintCardPath}/immune`] = true;
       updates[`${saintCardPath}/deactivated`] = false;
+      updates[`${saintCardPath}/appliedEffects`] = null;
 
-      // Remove all effects from the Saint card
 
-    // START HERE, this didn't work
-      const effectRemovalUpdates = removeCardEffects(gameState, persistPlayerId, persistCardId);
-      Object.assign(updates, effectRemovalUpdates);
 
 
     return updates;
